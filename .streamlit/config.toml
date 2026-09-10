@@ -1,9 +1,10 @@
 [theme]
-primaryColor = "#1261C9"
+base = "light"
+primaryColor = "#2196F3"
+backgroundColor = "#E8F6FF"
+secondaryBackgroundColor = "#D9F1FF"
+textColor = "#17202A"
 font = "sans serif"
-baseRadius = "medium"
-showWidgetBorder = true
-showSidebarBorder = true
 
 [theme.light]
 base = "light"
