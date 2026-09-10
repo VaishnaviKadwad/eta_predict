@@ -423,26 +423,11 @@ MODEL_MAE = 7.88
 
 with st.sidebar:
 
-    st.markdown(
-        """
-        <div style="
-            font-size:28px;
-            font-weight:800;
-            margin-bottom:3px;
-        ">
-            🚆 RailCast
-        </div>
-
-        <div style="
-            font-size:13px;
-            opacity:0.65;
-            margin-bottom:25px;
-        ">
-            Dynamic ETA & Delay Intelligence
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.info(
+    f"🚆 **Current Journey Point**\n\n"
+    f"### {station} → {next_station}\n\n"
+    f"Train **{selected_train}** • {selected_row['date']}"
+)
 
     st.markdown("### DASHBOARDS")
 
@@ -1237,148 +1222,142 @@ if role == "👤 Passenger":
         )
 
 
-    # --------------------------------------------------------
-    # WHY THIS PREDICTION?
-    # --------------------------------------------------------
+   # --------------------------------------------------------
+# WHY THIS PREDICTION?
+# --------------------------------------------------------
 
-    st.markdown(
-        '<div class="section-title">🔎 Why is RailCast predicting this?</div>',
-        unsafe_allow_html=True
+st.markdown("### 🔎 Why is RailCast predicting this?")
+
+st.caption(
+    "RailCast combines the train's current delay, route conditions, "
+    "weather, congestion and historical section behaviour."
+)
+
+
+# Determine the strongest visible operating factor
+
+factors = {
+    "rainfall": rainfall,
+    "low_visibility": max(0, 1000 - visibility),
+    "congestion": congestion * 100,
+    "current_delay": current_delay,
+    "section_time": section_time
+}
+
+top_factor = max(
+    factors,
+    key=factors.get
+)
+
+
+if top_factor == "rainfall":
+
+    factor_name = "Rainfall"
+    factor_value = f"{rainfall:.0f} mm"
+    explanation = (
+        "Rainfall can contribute to slower movement and increased "
+        "operational caution."
     )
 
 
-    # Determine strongest intuitive factor
-    factors = {
-        "rainfall": rainfall,
-        "low_visibility": max(
-            0,
-            1000 - visibility
-        ),
-        "congestion": congestion * 100,
-        "current_delay": current_delay,
-        "section_time": section_time
-    }
+elif top_factor == "low_visibility":
 
-
-    top_factor = max(
-        factors,
-        key=factors.get
+    factor_name = "Visibility"
+    factor_value = f"{visibility:.0f} m"
+    explanation = (
+        "Reduced visibility can increase operational caution "
+        "and affect running conditions."
     )
 
 
-    if top_factor == "rainfall":
+elif top_factor == "congestion":
 
-        factor_text = (
-            f"rainfall of {rainfall:.0f} mm"
-        )
-
-        effect_text = (
-            "Wet conditions can contribute to slower section movement."
-        )
-
-
-    elif top_factor == "low_visibility":
-
-        factor_text = (
-            f"visibility of {visibility:.0f} m"
-        )
-
-        effect_text = (
-            "Reduced visibility can increase operational caution."
-        )
-
-
-    elif top_factor == "congestion":
-
-        factor_text = (
-            f"a congestion score of {congestion:.2f}"
-        )
-
-        effect_text = (
-            "Higher congestion can increase downstream running time."
-        )
-
-
-    elif top_factor == "current_delay":
-
-        factor_text = (
-            f"the current delay of {current_delay:.1f} minutes"
-        )
-
-        effect_text = (
-            "Existing delay provides an important signal for the "
-            "expected downstream delay."
-        )
-
-
-    else:
-
-        factor_text = (
-            f"a historical section time of {section_time:.1f} minutes"
-        )
-
-        effect_text = (
-            "Historical running time helps the model estimate "
-            "how quickly the train can cover the next section."
-        )
-
-
-    st.markdown(
-        f"""
-        <div class="explanation-box">
-
-            <div class="explanation-title">
-                RailCast forecasts approximately
-                <b>{normal_prediction:.1f} minutes</b>
-                of delay.
-            </div>
-
-            <div class="explanation-main">
-
-                One important operating signal is
-                <b>{factor_text}</b>.
-
-                {effect_text}
-
-            </div>
-
-            <div style="margin-top:12px;">
-
-                <span class="reason-pill">
-                    Current delay: {current_delay:.1f} min
-                </span>
-
-                <span class="reason-pill">
-                    Rainfall: {rainfall:.0f} mm
-                </span>
-
-                <span class="reason-pill">
-                    Visibility: {visibility:.0f} m
-                </span>
-
-                <span class="reason-pill">
-                    Congestion: {congestion:.2f}
-                </span>
-
-                <span class="reason-pill">
-                    Section time: {section_time:.1f} min
-                </span>
-
-            </div>
-
-            <div style="
-                margin-top:15px;
-                font-size:12px;
-                opacity:0.6;
-            ">
-                Model reference: validation MAE ±{MODEL_MAE:.2f} min
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True
+    factor_name = "Congestion"
+    factor_value = f"{congestion:.2f}"
+    explanation = (
+        "Higher congestion can increase downstream running time "
+        "and delay propagation."
     )
 
+
+elif top_factor == "current_delay":
+
+    factor_name = "Current Delay"
+    factor_value = f"{current_delay:.1f} min"
+    explanation = (
+        "The current delay is an important signal for estimating "
+        "how much delay may continue downstream."
+    )
+
+
+else:
+
+    factor_name = "Historical Section Time"
+    factor_value = f"{section_time:.1f} min"
+    explanation = (
+        "Historical running time helps RailCast estimate how long "
+        "the train is likely to take over the next section."
+    )
+
+
+# Main prediction message
+
+st.success(
+    f"🎯 **RailCast Forecast: {normal_prediction:.1f} minutes delay**"
+)
+
+
+st.write(
+    f"RailCast is currently influenced most strongly by "
+    f"**{factor_name} ({factor_value})**."
+)
+
+
+st.write(explanation)
+
+
+# Supporting factors
+
+st.markdown("#### Operating factors considered")
+
+factor_col1, factor_col2, factor_col3, factor_col4 = st.columns(4)
+
+
+with factor_col1:
+
+    st.metric(
+        "Current Delay",
+        f"{current_delay:.1f} min"
+    )
+
+
+with factor_col2:
+
+    st.metric(
+        "Rainfall",
+        f"{rainfall:.0f} mm"
+    )
+
+
+with factor_col3:
+
+    st.metric(
+        "Visibility",
+        f"{visibility:.0f} m"
+    )
+
+
+with factor_col4:
+
+    st.metric(
+        "Congestion",
+        f"{congestion:.2f}"
+    )
+
+
+st.caption(
+    f"Model validation reference: MAE = {MODEL_MAE:.2f} minutes"
+)
 
     # --------------------------------------------------------
     # DISRUPTION IMPACT
