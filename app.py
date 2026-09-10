@@ -5,7 +5,7 @@ import joblib
 import plotly.graph_objects as go
 
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageOps
 from datetime import datetime
 
 
@@ -22,15 +22,10 @@ st.set_page_config(
 
 
 # ============================================================
-# BASE DIRECTORY
+# PATHS
 # ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent
-
-
-# ============================================================
-# FILE PATHS
-# ============================================================
 
 DATA_PATH = BASE_DIR / "demo_data.csv"
 MODEL_PATH = BASE_DIR / "xgb_model.pkl"
@@ -40,29 +35,22 @@ RESIDUAL_FEATURES_PATH = BASE_DIR / "residual_features.pkl"
 
 
 # ============================================================
-# FIND BANNER AUTOMATICALLY
+# FIND BANNER
 # ============================================================
 
 def find_banner():
-    """
-    Search for train_banner.png in several possible locations.
-    This avoids problems caused by Streamlit Cloud working
-    directories.
-    """
 
-    possible_paths = [
+    paths = [
         BASE_DIR / "assets" / "train_banner.png",
         BASE_DIR / "train_banner.png",
         Path.cwd() / "assets" / "train_banner.png",
         Path.cwd() / "train_banner.png",
     ]
 
-    # Direct paths first
-    for path in possible_paths:
+    for path in paths:
         if path.exists() and path.is_file():
             return path
 
-    # Recursive search as final fallback
     try:
         for path in BASE_DIR.rglob("train_banner.png"):
             if path.is_file():
@@ -77,272 +65,42 @@ BANNER_FILE = find_banner()
 
 
 # ============================================================
-# THEME / CSS
-# ============================================================
-
-st.markdown(
-    """
-    <style>
-
-    /* Main page */
-
-    .block-container {
-        padding-top: 1.5rem;
-        padding-bottom: 3rem;
-        max-width: 1400px;
-    }
-
-    /* Hide unnecessary Streamlit decoration */
-
-    #MainMenu {
-        visibility: hidden;
-    }
-
-    footer {
-        visibility: hidden;
-    }
-
-    /* Section titles */
-
-    .section-title {
-        font-size: 28px;
-        font-weight: 750;
-        margin-top: 18px;
-        margin-bottom: 4px;
-    }
-
-    .section-subtitle {
-        font-size: 14px;
-        opacity: 0.68;
-        margin-bottom: 18px;
-    }
-
-    /* Hero */
-
-    .hero {
-        border-radius: 18px;
-        padding: 26px 30px;
-        margin-bottom: 22px;
-        background: linear-gradient(
-            100deg,
-            #d62828 0%,
-            #f4511e 38%,
-            #f77f00 68%,
-            #fcbf49 100%
-        );
-        color: white;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-    }
-
-    .hero-title {
-        font-size: 34px;
-        font-weight: 800;
-        margin: 0;
-    }
-
-    .hero-subtitle {
-        font-size: 17px;
-        margin-top: 8px;
-        font-weight: 500;
-    }
-
-    .hero-tagline {
-        font-size: 14px;
-        margin-top: 12px;
-        opacity: 0.95;
-    }
-
-    /* Cards */
-
-    .info-card {
-        border: 1px solid rgba(120,120,120,0.18);
-        border-radius: 16px;
-        padding: 20px;
-        min-height: 125px;
-        background: rgba(128,128,128,0.045);
-    }
-
-    .card-label {
-        font-size: 13px;
-        opacity: 0.65;
-        margin-bottom: 7px;
-    }
-
-    .card-value {
-        font-size: 29px;
-        font-weight: 750;
-    }
-
-    .card-small {
-        font-size: 13px;
-        opacity: 0.65;
-        margin-top: 5px;
-    }
-
-    /* Prediction */
-
-    .prediction-card {
-        border-radius: 18px;
-        padding: 24px;
-        border: 1px solid rgba(30,100,200,0.18);
-        background: linear-gradient(
-            135deg,
-            rgba(30,100,200,0.08),
-            rgba(0,160,180,0.05)
-        );
-    }
-
-    .prediction-number {
-        font-size: 42px;
-        font-weight: 800;
-    }
-
-    /* Status */
-
-    .status-low {
-        display: inline-block;
-        padding: 7px 14px;
-        border-radius: 999px;
-        font-weight: 700;
-        background: rgba(46, 160, 67, 0.13);
-        color: #2e8b57;
-    }
-
-    .status-medium {
-        display: inline-block;
-        padding: 7px 14px;
-        border-radius: 999px;
-        font-weight: 700;
-        background: rgba(245, 166, 35, 0.16);
-        color: #c47700;
-    }
-
-    .status-high {
-        display: inline-block;
-        padding: 7px 14px;
-        border-radius: 999px;
-        font-weight: 700;
-        background: rgba(214, 40, 40, 0.14);
-        color: #d62828;
-    }
-
-    /* Explanation */
-
-    .explanation-box {
-        border-radius: 18px;
-        padding: 22px 24px;
-        background: rgba(128,128,128,0.055);
-        border: 1px solid rgba(128,128,128,0.17);
-        margin-top: 10px;
-        margin-bottom: 20px;
-    }
-
-    .explanation-title {
-        font-size: 21px;
-        font-weight: 750;
-        margin-bottom: 8px;
-    }
-
-    .explanation-main {
-        font-size: 16px;
-        line-height: 1.55;
-    }
-
-    .reason-pill {
-        display: inline-block;
-        padding: 7px 12px;
-        border-radius: 999px;
-        margin: 5px 5px 0 0;
-        background: rgba(30,100,200,0.10);
-        font-size: 13px;
-    }
-
-    /* Disruption */
-
-    .impact-positive {
-        font-size: 26px;
-        font-weight: 800;
-    }
-
-    /* Role card */
-
-    .role-header {
-        font-size: 18px;
-        font-weight: 750;
-        margin-bottom: 3px;
-    }
-
-    /* Footer */
-
-    .railcast-footer {
-        text-align: center;
-        opacity: 0.55;
-        font-size: 12px;
-        margin-top: 40px;
-        padding-top: 20px;
-        border-top: 1px solid rgba(128,128,128,0.18);
-    }
-
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
-
-# ============================================================
-# HERO BANNER
+# BANNER
 # ============================================================
 
 if BANNER_FILE is not None:
 
     try:
+
         banner = Image.open(BANNER_FILE)
         banner.load()
 
         if banner.mode not in ("RGB", "RGBA"):
             banner = banner.convert("RGB")
 
-        # Use Streamlit's native image renderer.
-        # This avoids the previous raw-HTML problem.
+        # Display the actual uploaded image.
         st.image(
             banner,
             width="stretch"
         )
 
-    except Exception:
-        # Clean fallback
-        st.markdown(
-            """
-            <div class="hero">
-                <div class="hero-title">🚆 RailCast</div>
-                <div class="hero-subtitle">
-                    Dynamic ETA Intelligence for Indian Railways
-                </div>
-                <div class="hero-tagline">
-                    Predicting how delays evolve — before they arrive.
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
+    except Exception as e:
+
+        st.warning(
+            f"Banner could not be displayed: {e}"
+        )
+
+        st.title("🚆 RailCast")
+        st.caption(
+            "Dynamic ETA Intelligence for Indian Railways"
         )
 
 else:
 
-    # If the PNG genuinely isn't available in deployment,
-    # show a designed fallback rather than breaking the app.
-    st.markdown(
-        """
-        <div class="hero">
-            <div class="hero-title">🚆 RailCast</div>
-            <div class="hero-subtitle">
-                Dynamic ETA Intelligence for Indian Railways
-            </div>
-            <div class="hero-tagline">
-                Predicting how delays evolve — before they arrive.
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
+    st.title("🚆 RailCast")
+
+    st.info(
+        "Dynamic ETA Intelligence for Indian Railways"
     )
 
 
@@ -354,19 +112,21 @@ else:
 def load_data():
 
     if not DATA_PATH.exists():
-        st.error("demo_data.csv was not found.")
+
+        st.error(
+            f"demo_data.csv not found at: {DATA_PATH}"
+        )
+
         st.stop()
 
-    data = pd.read_csv(DATA_PATH)
-
-    return data
+    return pd.read_csv(DATA_PATH)
 
 
 df = load_data()
 
 
 # ============================================================
-# LOAD MODELS
+# LOAD MODEL
 # ============================================================
 
 @st.cache_resource
@@ -379,13 +139,19 @@ def load_models():
     residual_features = None
 
     if RESIDUAL_MODEL_PATH.exists():
-        residual_model = joblib.load(RESIDUAL_MODEL_PATH)
+        residual_model = joblib.load(
+            RESIDUAL_MODEL_PATH
+        )
 
     if FEATURE_COLUMNS_PATH.exists():
-        feature_columns = joblib.load(FEATURE_COLUMNS_PATH)
+        feature_columns = joblib.load(
+            FEATURE_COLUMNS_PATH
+        )
 
     if RESIDUAL_FEATURES_PATH.exists():
-        residual_features = joblib.load(RESIDUAL_FEATURES_PATH)
+        residual_features = joblib.load(
+            RESIDUAL_FEATURES_PATH
+        )
 
     return (
         model,
@@ -406,12 +172,15 @@ try:
 
 except Exception as e:
 
-    st.error(f"Unable to load model files: {e}")
+    st.error(
+        f"Model loading error: {e}"
+    )
+
     st.stop()
 
 
 # ============================================================
-# MODEL METRIC
+# MODEL INFORMATION
 # ============================================================
 
 MODEL_MAE = 7.88
@@ -423,16 +192,18 @@ MODEL_MAE = 7.88
 
 with st.sidebar:
 
-    st.info(
-    f"🚆 **Current Journey Point**\n\n"
-    f"### {station} → {next_station}\n\n"
-    f"Train **{selected_train}** • {selected_row['date']}"
-)
+    st.title("🚆 RailCast")
 
-    st.markdown("### DASHBOARDS")
+    st.caption(
+        "Dynamic ETA & Delay Intelligence"
+    )
+
+    st.divider()
+
+    st.subheader("DASHBOARDS")
 
     role = st.radio(
-        "Select dashboard",
+        "Choose dashboard",
         [
             "👤 Passenger",
             "🏢 Station Operator",
@@ -444,56 +215,57 @@ with st.sidebar:
 
     st.divider()
 
-    st.markdown("### MODEL")
+    st.subheader("MODEL")
 
     st.metric(
         "Validation MAE",
         f"{MODEL_MAE:.2f} min"
     )
 
-    st.caption("XGBoost prediction engine")
-    st.caption("Historical + operating-condition features")
-
-
-# ============================================================
-# CURRENT DATE / TIME
-# ============================================================
-
-now = datetime.now()
-
-top_left, top_right = st.columns([4, 1])
-
-with top_right:
-
-    st.markdown(
-        f"📅 **{now.strftime('%d %b %Y')}**"
+    st.caption(
+        "XGBoost prediction engine"
     )
 
-    st.markdown(
-        f"🕐 **{now.strftime('%I:%M %p')}**"
+    st.caption(
+        "Historical + operating-condition features"
     )
 
 
 # ============================================================
-# JOURNEY SELECTION
+# DATE / TIME
 # ============================================================
 
-st.markdown(
-    '<div class="section-title">🚆 Select Journey</div>',
-    unsafe_allow_html=True
+current_time = datetime.now()
+
+date_col, time_col = st.columns([4, 1])
+
+with time_col:
+
+    st.write(
+        f"📅 **{current_time.strftime('%d %b %Y')}**"
+    )
+
+    st.write(
+        f"🕐 **{current_time.strftime('%I:%M %p')}**"
+    )
+
+
+# ============================================================
+# SELECT JOURNEY
+# ============================================================
+
+st.title("🚆 Select Journey")
+
+st.caption(
+    "Choose a train and journey point to generate a dynamic ETA forecast."
 )
 
-st.markdown(
-    '<div class="section-subtitle">'
-    'Choose a train and the current journey point to generate a dynamic forecast.'
-    '</div>',
-    unsafe_allow_html=True
-)
 
+# ------------------------------------------------------------
+# Train
+# ------------------------------------------------------------
 
-# Train list
-
-trains = (
+trains = sorted(
     df["train"]
     .astype(str)
     .dropna()
@@ -501,11 +273,13 @@ trains = (
     .tolist()
 )
 
-trains = sorted(trains)
 
+if not trains:
 
-if len(trains) == 0:
-    st.error("No train records found in demo_data.csv.")
+    st.error(
+        "No train records found."
+    )
+
     st.stop()
 
 
@@ -515,19 +289,28 @@ selected_train = st.selectbox(
 )
 
 
-# Filter train
+# ------------------------------------------------------------
+# Train data
+# ------------------------------------------------------------
 
 train_df = df[
-    df["train"].astype(str) == str(selected_train)
+    df["train"].astype(str)
+    == str(selected_train)
 ].copy()
 
 
 if train_df.empty:
-    st.warning("No data found for this train.")
+
+    st.warning(
+        "No records found for this train."
+    )
+
     st.stop()
 
 
-# Journey point options
+# ------------------------------------------------------------
+# Journey options
+# ------------------------------------------------------------
 
 train_df["journey_label"] = (
     train_df["station"].astype(str)
@@ -539,7 +322,11 @@ train_df["journey_label"] = (
 )
 
 
-journey_options = train_df["journey_label"].tolist()
+journey_options = (
+    train_df["journey_label"]
+    .drop_duplicates()
+    .tolist()
+)
 
 
 selected_journey = st.selectbox(
@@ -549,158 +336,18 @@ selected_journey = st.selectbox(
 
 
 selected_row = train_df[
-    train_df["journey_label"] == selected_journey
+    train_df["journey_label"]
+    == selected_journey
 ].iloc[0].copy()
 
 
-station = str(selected_row["station"])
-next_station = str(selected_row["next_station"])
+station = str(
+    selected_row["station"]
+)
 
-
-# ============================================================
-# FEATURE PREPARATION
-# ============================================================
-
-def prepare_features(row, disruption=None):
-
-    x = row.copy()
-
-    # ----------------------------------------
-    # Apply disruption modifications
-    # ----------------------------------------
-
-    if disruption == "🌫️ Dense Fog":
-
-        if "visibility_m" in x:
-            x["visibility_m"] = 150
-
-        if "temperature_c" in x:
-            x["temperature_c"] = -3
-
-
-    elif disruption == "🌧️ Heavy Rain":
-
-        if "rainfall_mm" in x:
-            x["rainfall_mm"] = 80
-
-
-    elif disruption == "🚧 Speed Restriction":
-
-        if "historical_section_time" in x:
-            x["historical_section_time"] = (
-                float(x["historical_section_time"]) * 1.5
-            )
-
-
-    elif disruption == "🚦 Signal Halt":
-
-        if "delay_minutes" in x:
-            x["delay_minutes"] = (
-                float(x["delay_minutes"]) + 25
-            )
-
-
-    elif disruption == "🚥 Track Congestion Spike":
-
-        if "congestion_score" in x:
-            x["congestion_score"] = 0.95
-
-
-    elif disruption == "🛤️ Maintenance Block":
-
-        if "delay_minutes" in x:
-            x["delay_minutes"] = (
-                float(x["delay_minutes"]) + 45
-            )
-
-
-    # ----------------------------------------
-    # Build model dataframe
-    # ----------------------------------------
-
-    if feature_columns is not None:
-
-        cols = list(feature_columns)
-
-    else:
-
-        # Fallback if feature_columns.pkl isn't available
-        cols = [
-            "delay_minutes",
-            "distance_to_next",
-            "historical_section_time",
-            "rainfall_mm",
-            "temperature_c",
-            "visibility_m",
-            "congestion_score",
-            "hour",
-            "day_of_week",
-            "station_sequence"
-        ]
-
-
-    model_input = {}
-
-    for col in cols:
-
-        if col in x.index:
-
-            value = x[col]
-
-            try:
-                model_input[col] = float(value)
-
-            except Exception:
-                model_input[col] = 0.0
-
-        else:
-
-            model_input[col] = 0.0
-
-
-    X = pd.DataFrame(
-        [model_input],
-        columns=cols
-    )
-
-    return X, x
-
-
-# ============================================================
-# PREDICTION
-# ============================================================
-
-def get_prediction(row, disruption=None):
-
-    X, modified_row = prepare_features(
-        row,
-        disruption
-    )
-
-    prediction = model.predict(X)
-
-    predicted_delay = float(
-        np.asarray(prediction).reshape(-1)[0]
-    )
-
-    return predicted_delay, modified_row
-
-
-try:
-
-    normal_prediction, normal_row = get_prediction(
-        selected_row,
-        None
-    )
-
-except Exception as e:
-
-    st.error(f"Prediction error: {e}")
-    st.stop()
-
-
-# Don't allow negative delay to look like a negative delay
-normal_prediction = max(0.0, normal_prediction)
+next_station = str(
+    selected_row["next_station"]
+)
 
 
 # ============================================================
@@ -709,16 +356,10 @@ normal_prediction = max(0.0, normal_prediction)
 
 st.divider()
 
-st.markdown(
-    '<div class="section-title">⚡ What-if Disruption Simulator</div>',
-    unsafe_allow_html=True
-)
+st.header("⚡ What-if Disruption Simulator")
 
-st.markdown(
-    '<div class="section-subtitle">'
-    'Test how an unexpected operating event could change the forecast.'
-    '</div>',
-    unsafe_allow_html=True
+st.caption(
+    "Test how an unexpected operating event could change the forecast."
 )
 
 
@@ -739,37 +380,208 @@ disruption = st.selectbox(
 )
 
 
+# ============================================================
+# PREPARE FEATURES
+# ============================================================
+
+def prepare_features(row, disruption=None):
+
+    modified = row.copy()
+
+    # --------------------------------------------------------
+    # Disruption modifications
+    # --------------------------------------------------------
+
+    if disruption == "🌫️ Dense Fog":
+
+        if "visibility_m" in modified:
+
+            modified["visibility_m"] = 150
+
+        if "temperature_c" in modified:
+
+            modified["temperature_c"] = -3
+
+
+    elif disruption == "🌧️ Heavy Rain":
+
+        if "rainfall_mm" in modified:
+
+            modified["rainfall_mm"] = 80
+
+
+    elif disruption == "🚧 Speed Restriction":
+
+        if "historical_section_time" in modified:
+
+            modified["historical_section_time"] = (
+                float(
+                    modified[
+                        "historical_section_time"
+                    ]
+                )
+                * 1.5
+            )
+
+
+    elif disruption == "🚦 Signal Halt":
+
+        if "delay_minutes" in modified:
+
+            modified["delay_minutes"] = (
+                float(
+                    modified[
+                        "delay_minutes"
+                    ]
+                )
+                + 25
+            )
+
+
+    elif disruption == "🚥 Track Congestion Spike":
+
+        if "congestion_score" in modified:
+
+            modified["congestion_score"] = 0.95
+
+
+    elif disruption == "🛤️ Maintenance Block":
+
+        if "delay_minutes" in modified:
+
+            modified["delay_minutes"] = (
+                float(
+                    modified[
+                        "delay_minutes"
+                    ]
+                )
+                + 45
+            )
+
+
+    # --------------------------------------------------------
+    # Model columns
+    # --------------------------------------------------------
+
+    if feature_columns is not None:
+
+        columns = list(feature_columns)
+
+    else:
+
+        columns = [
+            "delay_minutes",
+            "distance_to_next",
+            "historical_section_time",
+            "rainfall_mm",
+            "temperature_c",
+            "visibility_m",
+            "congestion_score",
+            "hour",
+            "day_of_week",
+            "station_sequence"
+        ]
+
+
+    values = {}
+
+    for column in columns:
+
+        if column in modified.index:
+
+            value = modified[column]
+
+            try:
+
+                values[column] = float(value)
+
+            except Exception:
+
+                values[column] = 0.0
+
+        else:
+
+            values[column] = 0.0
+
+
+    X = pd.DataFrame(
+        [values],
+        columns=columns
+    )
+
+
+    return X, modified
+
+
+# ============================================================
+# PREDICTION
+# ============================================================
+
+def predict_delay(row, disruption=None):
+
+    X, modified = prepare_features(
+        row,
+        disruption
+    )
+
+    prediction = model.predict(X)
+
+    value = float(
+        np.asarray(prediction)
+        .reshape(-1)[0]
+    )
+
+    return max(0.0, value), modified
+
+
+try:
+
+    normal_prediction, normal_row = predict_delay(
+        selected_row
+    )
+
+except Exception as e:
+
+    st.error(
+        f"Prediction error: {e}"
+    )
+
+    st.stop()
+
+
+# ------------------------------------------------------------
+# Disruption prediction
+# ------------------------------------------------------------
+
+disruption_prediction = None
+
 if disruption != "None":
 
     try:
 
-        disruption_prediction, disrupted_row = get_prediction(
-            selected_row,
-            disruption
-        )
-
-        disruption_prediction = max(
-            0.0,
-            disruption_prediction
+        disruption_prediction, disrupted_row = (
+            predict_delay(
+                selected_row,
+                disruption
+            )
         )
 
     except Exception as e:
 
-        st.error(f"Disruption prediction error: {e}")
-
-        disruption_prediction = normal_prediction
-
-else:
-
-    disruption_prediction = None
+        st.error(
+            f"Disruption prediction error: {e}"
+        )
 
 
 # ============================================================
-# DELAY RISK
+# BASIC VALUES
 # ============================================================
 
 current_delay = float(
-    selected_row.get("delay_minutes", 0)
+    selected_row.get(
+        "delay_minutes",
+        0
+    )
 )
 
 current_delay = max(
@@ -778,19 +590,62 @@ current_delay = max(
 )
 
 
-def calculate_risk(delay):
+rainfall = float(
+    selected_row.get(
+        "rainfall_mm",
+        0
+    )
+)
+
+
+temperature = float(
+    selected_row.get(
+        "temperature_c",
+        0
+    )
+)
+
+
+visibility = float(
+    selected_row.get(
+        "visibility_m",
+        0
+    )
+)
+
+
+congestion = float(
+    selected_row.get(
+        "congestion_score",
+        0
+    )
+)
+
+
+section_time = float(
+    selected_row.get(
+        "historical_section_time",
+        0
+    )
+)
+
+
+# ============================================================
+# RISK
+# ============================================================
+
+def delay_risk(delay):
 
     if delay < 5:
-        return "LOW", "status-low"
+        return "LOW"
 
-    elif delay < 15:
-        return "MEDIUM", "status-medium"
+    if delay < 15:
+        return "MEDIUM"
 
-    else:
-        return "HIGH", "status-high"
+    return "HIGH"
 
 
-risk, risk_class = calculate_risk(
+risk = delay_risk(
     normal_prediction
 )
 
@@ -803,79 +658,80 @@ if role == "👤 Passenger":
 
     st.divider()
 
-    st.markdown(
-        '<div class="section-title">🎫 Passenger View</div>',
-        unsafe_allow_html=True
-    )
+    st.header("🎫 Passenger View")
 
-    st.markdown(
-        '<div class="section-subtitle">'
-        'A simple view of where your train is and what to expect next.'
-        '</div>',
-        unsafe_allow_html=True
+    st.caption(
+        "A simple view of where your train is and what to expect next."
     )
 
 
-    # --------------------------------------------------------
-    # Journey headline
-    # --------------------------------------------------------
+    # ========================================================
+    # CURRENT JOURNEY
+    # ========================================================
 
-    st.markdown(
-        f"""
-        <div class="prediction-card">
+    st.subheader(
+        "🚆 Current Journey Point"
+    )
 
-            <div style="font-size:14px;opacity:0.65;">
-                CURRENT JOURNEY POINT
-            </div>
+    journey_a, journey_b, journey_c = st.columns(
+        [2, 2, 1]
+    )
 
-            <div style="
-                font-size:27px;
-                font-weight:800;
-                margin-top:5px;
-            ">
-                🚆 {station} → {next_station}
-            </div>
+    with journey_a:
 
-            <div style="
-                margin-top:7px;
-                font-size:14px;
-                opacity:0.65;
-            ">
-                Train {selected_train} • {selected_row["date"]}
-            </div>
+        st.metric(
+            "From",
+            station
+        )
 
-        </div>
-        """,
-        unsafe_allow_html=True
+    with journey_b:
+
+        st.metric(
+            "Next Station",
+            next_station
+        )
+
+    with journey_c:
+
+        st.metric(
+            "Train",
+            selected_train
+        )
+
+
+    st.caption(
+        f"Journey date: {selected_row['date']}"
     )
 
 
-    st.markdown("")
+    # ========================================================
+    # FORECAST
+    # ========================================================
 
+    st.subheader(
+        "🎯 Dynamic ETA Forecast"
+    )
 
-    # --------------------------------------------------------
-    # Main forecast cards
-    # --------------------------------------------------------
 
     if disruption == "None":
 
-        c1, c2, c3, c4 = st.columns(4)
+        col1, col2, col3, col4 = st.columns(4)
 
-        with c1:
+        with col1:
 
             st.metric(
                 "Current Delay",
                 f"{current_delay:.1f} min"
             )
 
-        with c2:
+        with col2:
 
             st.metric(
                 "RailCast Forecast",
                 f"{normal_prediction:.1f} min"
             )
 
-        with c3:
+        with col3:
 
             low = normal_prediction - MODEL_MAE
             high = normal_prediction + MODEL_MAE
@@ -885,155 +741,167 @@ if role == "👤 Passenger":
                 f"{low:.0f} → {high:.0f} min"
             )
 
-        with c4:
+        with col4:
 
-            st.markdown(
-                f"""
-                <div class="{risk_class}">
-                    {risk} RISK
-                </div>
-                """,
-                unsafe_allow_html=True
+            st.metric(
+                "Delay Risk",
+                risk
             )
-
-            st.caption("Expected delay risk")
 
 
     else:
 
-        c1, c2, c3, c4 = st.columns(4)
+        col1, col2, col3, col4 = st.columns(4)
 
-        with c1:
+        with col1:
 
             st.metric(
                 "Current Delay",
                 f"{current_delay:.1f} min"
             )
 
-        with c2:
+        with col2:
 
             st.metric(
                 "Normal Forecast",
                 f"{normal_prediction:.1f} min"
             )
 
-        with c3:
+        with col3:
+
+            impact = (
+                disruption_prediction
+                - normal_prediction
+            )
 
             st.metric(
                 "Disruption Forecast",
                 f"{disruption_prediction:.1f} min",
-                delta=f"{disruption_prediction - normal_prediction:+.1f} min"
+                delta=f"{impact:+.1f} min"
             )
 
-        with c4:
+        with col4:
 
-            risk_after, risk_class_after = calculate_risk(
-                disruption_prediction
+            st.metric(
+                "Risk After Event",
+                delay_risk(
+                    disruption_prediction
+                )
             )
 
-            st.markdown(
-                f"""
-                <div class="{risk_class_after}">
-                    {risk_after} RISK
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
 
-            st.caption("After selected event")
+    # ========================================================
+    # PASSENGER MESSAGE
+    # ========================================================
 
+    st.subheader(
+        "💡 What does this mean?"
+    )
 
-    # --------------------------------------------------------
-    # Passenger message
-    # --------------------------------------------------------
-
-    st.markdown("")
 
     if disruption == "None":
 
         if normal_prediction < 5:
 
-            passenger_message = (
-                "The train is currently expected to maintain a relatively "
-                "low delay at this journey point."
+            message = (
+                "The train is currently expected to maintain "
+                "a relatively low delay at this journey point."
             )
 
         elif normal_prediction < 15:
 
-            passenger_message = (
-                "A moderate delay is expected. Passengers should allow "
-                "some additional time for onward travel."
+            message = (
+                "A moderate delay is expected. Allow some "
+                "additional time for onward travel."
             )
 
         else:
 
-            passenger_message = (
-                "A significant delay is forecast. Passengers with "
-                "connections should consider allowing extra time."
+            message = (
+                "A significant delay is forecast. Passengers "
+                "with connections should allow extra time."
             )
+
+        st.success(
+            message
+        )
 
     else:
 
-        impact = disruption_prediction - normal_prediction
-
-        passenger_message = (
-            f"The selected event could change the forecast by "
-            f"{impact:+.1f} minutes at this journey point."
+        impact = (
+            disruption_prediction
+            - normal_prediction
         )
 
+        if impact > 0:
 
-    st.info(
-        f"💡 **Passenger insight:** {passenger_message}"
+            st.warning(
+                f"⚠️ Under **{disruption}**, RailCast estimates "
+                f"approximately **{impact:.1f} additional minutes** "
+                f"of delay."
+            )
+
+        else:
+
+            st.info(
+                f"The selected scenario changes the forecast "
+                f"by **{impact:+.1f} minutes**."
+            )
+
+
+    # ========================================================
+    # JOURNEY MAP
+    # ========================================================
+
+    st.divider()
+
+    st.header("🗺️ Journey Map")
+
+    st.caption(
+        "Current journey point and route progression."
     )
 
 
-    # --------------------------------------------------------
-    # ROUTE MAP
-    # --------------------------------------------------------
-
-    st.markdown(
-        '<div class="section-title">🗺️ Journey Map</div>',
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        '<div class="section-subtitle">'
-        'Current journey point and route progression.'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-
-    # Get all stations for this train/date
     route_df = train_df[
         train_df["date"].astype(str)
         == str(selected_row["date"])
     ].copy()
 
 
-    # Remove duplicates while keeping route order
     route_df = route_df.drop_duplicates(
-        subset=["station", "next_station"]
+        subset=[
+            "station",
+            "next_station"
+        ]
     )
 
 
     route_stations = []
 
-    for _, r in route_df.iterrows():
 
-        s = str(r["station"])
+    for _, route_row in route_df.iterrows():
 
-        if s not in route_stations:
-            route_stations.append(s)
+        first_station = str(
+            route_row["station"]
+        )
+
+        second_station = str(
+            route_row["next_station"]
+        )
+
+        if first_station not in route_stations:
+
+            route_stations.append(
+                first_station
+            )
+
+        if second_station not in route_stations:
+
+            route_stations.append(
+                second_station
+            )
 
 
-        ns = str(r["next_station"])
-
-        if ns not in route_stations:
-            route_stations.append(ns)
-
-
-    # Fallback
     if len(route_stations) < 2:
 
         route_stations = [
@@ -1042,64 +910,70 @@ if role == "👤 Passenger":
         ]
 
 
-    # Position of current station
-    current_index = (
-        route_stations.index(station)
-        if station in route_stations
-        else 0
-    )
+    current_index = 0
+
+    if station in route_stations:
+
+        current_index = (
+            route_stations.index(station)
+        )
 
 
-    # Schematic map because current demo CSV has no lat/lon
-    x_positions = list(
+    x_values = list(
         range(len(route_stations))
     )
 
-    y_positions = [
+
+    y_values = [
         np.sin(i / 1.8) * 0.35
-        for i in x_positions
+        for i in x_values
     ]
 
 
     fig = go.Figure()
 
 
-    # Route line
+    # Route
+
     fig.add_trace(
         go.Scatter(
-            x=x_positions,
-            y=y_positions,
+            x=x_values,
+            y=y_values,
             mode="lines+markers",
             line=dict(
                 width=5
             ),
             marker=dict(
-                size=12
+                size=11
             ),
+            text=route_stations,
             hovertemplate=(
                 "<b>%{text}</b>"
                 "<extra></extra>"
-            ),
-            text=route_stations
+            )
         )
     )
 
 
-    # Highlight current station
+    # Current station
+
     fig.add_trace(
         go.Scatter(
-            x=[x_positions[current_index]],
-            y=[y_positions[current_index]],
+            x=[
+                x_values[
+                    current_index
+                ]
+            ],
+            y=[
+                y_values[
+                    current_index
+                ]
+            ],
             mode="markers",
             marker=dict(
-                size=24,
-                symbol="circle"
+                size=24
             ),
-            hovertemplate=(
-                "<b>Current journey point</b><br>"
-                + station
-                + "<extra></extra>"
-            )
+            name="Current"
         )
     )
 
@@ -1135,54 +1009,27 @@ if role == "👤 Passenger":
     )
 
 
-    # Route labels below map
-    route_text = "  →  ".join(
-        route_stations
-    )
-
     st.caption(
-        f"Route: {route_text}"
+        "Route: "
+        + " → ".join(route_stations)
     )
 
 
-    # --------------------------------------------------------
-    # OPERATING CONDITIONS
-    # --------------------------------------------------------
+    # ========================================================
+    # CONDITIONS
+    # ========================================================
 
-    st.markdown(
-        '<div class="section-title">🌦️ Current Operating Conditions</div>',
-        unsafe_allow_html=True
+    st.divider()
+
+    st.header(
+        "🌦️ Current Operating Conditions"
     )
 
 
-    condition_cols = st.columns(5)
+    c1, c2, c3, c4, c5 = st.columns(5)
 
 
-    rainfall = float(
-        selected_row.get("rainfall_mm", 0)
-    )
-
-    temperature = float(
-        selected_row.get("temperature_c", 0)
-    )
-
-    visibility = float(
-        selected_row.get("visibility_m", 0)
-    )
-
-    congestion = float(
-        selected_row.get("congestion_score", 0)
-    )
-
-    section_time = float(
-        selected_row.get(
-            "historical_section_time",
-            0
-        )
-    )
-
-
-    with condition_cols[0]:
+    with c1:
 
         st.metric(
             "🌧️ Rainfall",
@@ -1190,7 +1037,7 @@ if role == "👤 Passenger":
         )
 
 
-    with condition_cols[1]:
+    with c2:
 
         st.metric(
             "🌡️ Temperature",
@@ -1198,7 +1045,7 @@ if role == "👤 Passenger":
         )
 
 
-    with condition_cols[2]:
+    with c3:
 
         st.metric(
             "👁️ Visibility",
@@ -1206,7 +1053,7 @@ if role == "👤 Passenger":
         )
 
 
-    with condition_cols[3]:
+    with c4:
 
         st.metric(
             "🚦 Congestion",
@@ -1214,7 +1061,7 @@ if role == "👤 Passenger":
         )
 
 
-    with condition_cols[4]:
+    with c5:
 
         st.metric(
             "🛤️ Section Time",
@@ -1222,153 +1069,185 @@ if role == "👤 Passenger":
         )
 
 
-   # --------------------------------------------------------
-# WHY THIS PREDICTION?
-# --------------------------------------------------------
+    # ========================================================
+    # WHY PREDICTION
+    # ========================================================
 
-st.markdown("### 🔎 Why is RailCast predicting this?")
+    st.divider()
 
-st.caption(
-    "RailCast combines the train's current delay, route conditions, "
-    "weather, congestion and historical section behaviour."
-)
+    st.header(
+        "🔎 Why is RailCast predicting this?"
+    )
 
-
-# Determine the strongest visible operating factor
-
-factors = {
-    "rainfall": rainfall,
-    "low_visibility": max(0, 1000 - visibility),
-    "congestion": congestion * 100,
-    "current_delay": current_delay,
-    "section_time": section_time
-}
-
-top_factor = max(
-    factors,
-    key=factors.get
-)
-
-
-if top_factor == "rainfall":
-
-    factor_name = "Rainfall"
-    factor_value = f"{rainfall:.0f} mm"
-    explanation = (
-        "Rainfall can contribute to slower movement and increased "
-        "operational caution."
+    st.caption(
+        "RailCast combines current delay, historical running "
+        "behaviour and operating conditions."
     )
 
 
-elif top_factor == "low_visibility":
+    # Determine strongest visible signal
 
-    factor_name = "Visibility"
-    factor_value = f"{visibility:.0f} m"
-    explanation = (
-        "Reduced visibility can increase operational caution "
-        "and affect running conditions."
+    factor_values = {
+        "Current Delay": current_delay,
+        "Rainfall": rainfall,
+        "Low Visibility": max(
+            0,
+            1000 - visibility
+        ),
+        "Congestion": congestion * 100,
+        "Historical Section Time": section_time
+    }
+
+
+    strongest_factor = max(
+        factor_values,
+        key=factor_values.get
     )
 
 
-elif top_factor == "congestion":
+    if strongest_factor == "Current Delay":
 
-    factor_name = "Congestion"
-    factor_value = f"{congestion:.2f}"
-    explanation = (
-        "Higher congestion can increase downstream running time "
-        "and delay propagation."
+        factor_detail = (
+            f"The train currently has a delay of "
+            f"{current_delay:.1f} minutes."
+        )
+
+        reason = (
+            "Existing delay is an important signal for "
+            "estimating downstream delay propagation."
+        )
+
+
+    elif strongest_factor == "Rainfall":
+
+        factor_detail = (
+            f"Rainfall is currently {rainfall:.0f} mm."
+        )
+
+        reason = (
+            "Rainfall can contribute to slower running "
+            "conditions and increased operational caution."
+        )
+
+
+    elif strongest_factor == "Low Visibility":
+
+        factor_detail = (
+            f"Visibility is currently {visibility:.0f} m."
+        )
+
+        reason = (
+            "Reduced visibility can increase operational "
+            "caution and affect running conditions."
+        )
+
+
+    elif strongest_factor == "Congestion":
+
+        factor_detail = (
+            f"Congestion score is {congestion:.2f}."
+        )
+
+        reason = (
+            "Higher congestion can increase downstream "
+            "running time and delay propagation."
+        )
+
+
+    else:
+
+        factor_detail = (
+            f"Historical section time is "
+            f"{section_time:.1f} minutes."
+        )
+
+        reason = (
+            "Historical running time helps estimate how "
+            "quickly the train can cover the next section."
+        )
+
+
+    # Main explanation
+
+    st.success(
+        f"🎯 **RailCast Forecast: "
+        f"{normal_prediction:.1f} minutes delay**"
     )
 
 
-elif top_factor == "current_delay":
-
-    factor_name = "Current Delay"
-    factor_value = f"{current_delay:.1f} min"
-    explanation = (
-        "The current delay is an important signal for estimating "
-        "how much delay may continue downstream."
+    st.write(
+        f"**Main operating signal:** {strongest_factor}"
     )
 
 
-else:
-
-    factor_name = "Historical Section Time"
-    factor_value = f"{section_time:.1f} min"
-    explanation = (
-        "Historical running time helps RailCast estimate how long "
-        "the train is likely to take over the next section."
+    st.write(
+        factor_detail
     )
 
 
-# Main prediction message
-
-st.success(
-    f"🎯 **RailCast Forecast: {normal_prediction:.1f} minutes delay**"
-)
-
-
-st.write(
-    f"RailCast is currently influenced most strongly by "
-    f"**{factor_name} ({factor_value})**."
-)
-
-
-st.write(explanation)
-
-
-# Supporting factors
-
-st.markdown("#### Operating factors considered")
-
-factor_col1, factor_col2, factor_col3, factor_col4 = st.columns(4)
-
-
-with factor_col1:
-
-    st.metric(
-        "Current Delay",
-        f"{current_delay:.1f} min"
+    st.write(
+        reason
     )
 
 
-with factor_col2:
-
-    st.metric(
-        "Rainfall",
-        f"{rainfall:.0f} mm"
+    st.markdown(
+        "#### Supporting signals"
     )
 
 
-with factor_col3:
+    e1, e2, e3, e4 = st.columns(4)
 
-    st.metric(
-        "Visibility",
-        f"{visibility:.0f} m"
+
+    with e1:
+
+        st.metric(
+            "Current Delay",
+            f"{current_delay:.1f} min"
+        )
+
+
+    with e2:
+
+        st.metric(
+            "Rainfall",
+            f"{rainfall:.0f} mm"
+        )
+
+
+    with e3:
+
+        st.metric(
+            "Visibility",
+            f"{visibility:.0f} m"
+        )
+
+
+    with e4:
+
+        st.metric(
+            "Congestion",
+            f"{congestion:.2f}"
+        )
+
+
+    st.caption(
+        f"Model validation reference: "
+        f"MAE = {MODEL_MAE:.2f} minutes."
     )
 
 
-with factor_col4:
-
-    st.metric(
-        "Congestion",
-        f"{congestion:.2f}"
-    )
-
-
-st.caption(
-    f"Model validation reference: MAE = {MODEL_MAE:.2f} minutes"
-)
-
-    # --------------------------------------------------------
+    # ========================================================
     # DISRUPTION IMPACT
-    # --------------------------------------------------------
+    # ========================================================
 
     if disruption != "None":
 
-        st.markdown(
-            '<div class="section-title">⚡ Disruption Impact</div>',
-            unsafe_allow_html=True
+        st.divider()
+
+        st.header(
+            "⚡ Disruption Impact"
         )
+
 
         impact = (
             disruption_prediction
@@ -1376,10 +1255,10 @@ st.caption(
         )
 
 
-        impact_cols = st.columns(3)
+        d1, d2, d3 = st.columns(3)
 
 
-        with impact_cols[0]:
+        with d1:
 
             st.metric(
                 "Normal Forecast",
@@ -1387,7 +1266,7 @@ st.caption(
             )
 
 
-        with impact_cols[1]:
+        with d2:
 
             st.metric(
                 "After Disruption",
@@ -1395,10 +1274,10 @@ st.caption(
             )
 
 
-        with impact_cols[2]:
+        with d3:
 
             st.metric(
-                "Forecast Change",
+                "Change",
                 f"{impact:+.1f} min"
             )
 
@@ -1406,33 +1285,22 @@ st.caption(
         if impact > 0:
 
             st.warning(
-                f"⚠️ **{disruption}** increases the predicted "
-                f"delay by approximately **{impact:.1f} minutes**."
-            )
-
-        elif impact < 0:
-
-            st.success(
-                f"RailCast predicts a reduction of "
-                f"{abs(impact):.1f} minutes under this scenario."
-            )
-
-        else:
-
-            st.info(
-                "The selected scenario does not materially change "
-                "the current prediction."
+                f"**{disruption}** could increase the "
+                f"predicted delay by approximately "
+                f"**{impact:.1f} minutes**."
             )
 
 
-    # --------------------------------------------------------
-    # PASSENGER FEEDBACK
-    # --------------------------------------------------------
+    # ========================================================
+    # FEEDBACK
+    # ========================================================
 
-    st.markdown(
-        '<div class="section-title">💬 Passenger Feedback</div>',
-        unsafe_allow_html=True
+    st.divider()
+
+    st.header(
+        "💬 Passenger Feedback"
     )
+
 
     feedback = st.radio(
         "How useful is this forecast?",
@@ -1454,14 +1322,26 @@ st.caption(
             BASE_DIR / "passenger_feedback.csv"
         )
 
-        feedback_row = pd.DataFrame(
+
+        feedback_data = pd.DataFrame(
             [{
-                "timestamp": datetime.now().isoformat(),
-                "train": selected_train,
-                "station": station,
-                "next_station": next_station,
-                "prediction": normal_prediction,
-                "feedback": feedback
+                "timestamp":
+                    datetime.now().isoformat(),
+
+                "train":
+                    selected_train,
+
+                "station":
+                    station,
+
+                "next_station":
+                    next_station,
+
+                "prediction":
+                    normal_prediction,
+
+                "feedback":
+                    feedback
             }]
         )
 
@@ -1470,7 +1350,7 @@ st.caption(
 
             if feedback_file.exists():
 
-                feedback_row.to_csv(
+                feedback_data.to_csv(
                     feedback_file,
                     mode="a",
                     header=False,
@@ -1479,13 +1359,13 @@ st.caption(
 
             else:
 
-                feedback_row.to_csv(
+                feedback_data.to_csv(
                     feedback_file,
                     index=False
                 )
 
             st.success(
-                "Thank you — your feedback has been recorded."
+                "Thank you — feedback recorded."
             )
 
         except Exception:
@@ -1496,23 +1376,19 @@ st.caption(
 
 
 # ============================================================
-# STATION OPERATOR DASHBOARD
+# STATION OPERATOR
 # ============================================================
 
 elif role == "🏢 Station Operator":
 
     st.divider()
 
-    st.markdown(
-        '<div class="section-title">🏢 Station Operator Dashboard</div>',
-        unsafe_allow_html=True
+    st.header(
+        "🏢 Station Operator Dashboard"
     )
 
-    st.markdown(
-        '<div class="section-subtitle">'
-        'Operational visibility for passenger communication and station readiness.'
-        '</div>',
-        unsafe_allow_html=True
+    st.caption(
+        "Passenger communication and station readiness."
     )
 
 
@@ -1551,14 +1427,14 @@ elif role == "🏢 Station Operator":
         )
 
 
-    st.markdown("")
+    st.divider()
 
 
     if normal_prediction >= 15:
 
         st.error(
             "🚨 High passenger-impact delay expected. "
-            "Consider proactive announcements and crowd-management preparation."
+            "Prepare proactive announcements and crowd management."
         )
 
     elif normal_prediction >= 5:
@@ -1575,31 +1451,35 @@ elif role == "🏢 Station Operator":
         )
 
 
-    st.markdown("### 📢 Passenger Communication")
+    st.subheader(
+        "📢 Suggested Passenger Announcement"
+    )
 
 
-    message = (
-        f"Train {selected_train} is currently at {station}. "
-        f"RailCast forecasts approximately "
+    announcement = (
+        f"Train {selected_train} is currently at "
+        f"{station}. RailCast forecasts approximately "
         f"{normal_prediction:.1f} minutes of delay toward "
         f"{next_station}."
     )
 
 
     st.text_area(
-        "Suggested announcement",
-        message,
+        "Announcement",
+        announcement,
         height=100
     )
 
 
-    st.markdown("### 🌦️ Station Conditions")
+    st.subheader(
+        "🌦️ Station Conditions"
+    )
 
 
-    cols = st.columns(4)
+    c1, c2, c3, c4 = st.columns(4)
 
 
-    with cols[0]:
+    with c1:
 
         st.metric(
             "Rainfall",
@@ -1607,7 +1487,7 @@ elif role == "🏢 Station Operator":
         )
 
 
-    with cols[1]:
+    with c2:
 
         st.metric(
             "Visibility",
@@ -1615,7 +1495,7 @@ elif role == "🏢 Station Operator":
         )
 
 
-    with cols[2]:
+    with c3:
 
         st.metric(
             "Congestion",
@@ -1623,7 +1503,7 @@ elif role == "🏢 Station Operator":
         )
 
 
-    with cols[3]:
+    with c4:
 
         st.metric(
             "Section Time",
@@ -1632,23 +1512,19 @@ elif role == "🏢 Station Operator":
 
 
 # ============================================================
-# TRAFFIC CONTROLLER DASHBOARD
+# TRAFFIC CONTROLLER
 # ============================================================
 
 elif role == "🚦 Traffic Controller":
 
     st.divider()
 
-    st.markdown(
-        '<div class="section-title">🚦 Traffic Controller Dashboard</div>',
-        unsafe_allow_html=True
+    st.header(
+        "🚦 Traffic Controller Dashboard"
     )
 
-    st.markdown(
-        '<div class="section-subtitle">'
-        'Predictive operational intelligence for delay propagation and disruption response.'
-        '</div>',
-        unsafe_allow_html=True
+    st.caption(
+        "Predictive operational intelligence for delay propagation."
     )
 
 
@@ -1666,7 +1542,7 @@ elif role == "🚦 Traffic Controller":
     with c2:
 
         st.metric(
-            "Forecast Delay",
+            "Forecast",
             f"{normal_prediction:.1f} min"
         )
 
@@ -1687,12 +1563,14 @@ elif role == "🚦 Traffic Controller":
         )
 
 
-    st.markdown("")
+    st.divider()
+
+    st.subheader(
+        "📈 Delay Evolution"
+    )
 
 
-    # Delay comparison chart
-
-    chart_df = pd.DataFrame(
+    chart_data = pd.DataFrame(
         {
             "Stage": [
                 "Current",
@@ -1708,13 +1586,14 @@ elif role == "🚦 Traffic Controller":
 
     fig = go.Figure()
 
+
     fig.add_trace(
         go.Bar(
-            x=chart_df["Stage"],
-            y=chart_df["Delay"],
+            x=chart_data["Stage"],
+            y=chart_data["Delay"],
             text=[
                 f"{x:.1f} min"
-                for x in chart_df["Delay"]
+                for x in chart_data["Delay"]
             ],
             textposition="auto"
         )
@@ -1722,7 +1601,6 @@ elif role == "🚦 Traffic Controller":
 
 
     fig.update_layout(
-        title="Delay Evolution",
         height=330,
         showlegend=False,
         yaxis_title="Delay (minutes)"
@@ -1735,77 +1613,83 @@ elif role == "🚦 Traffic Controller":
     )
 
 
-    st.markdown("### ⚡ Scenario Analysis")
-
-
-    controller_disruption = st.selectbox(
-        "Test operational scenario",
-        [
-            "None",
-            "🌫️ Dense Fog",
-            "🌧️ Heavy Rain",
-            "🚧 Speed Restriction",
-            "🚦 Signal Halt",
-            "🚥 Track Congestion Spike",
-            "🛤️ Maintenance Block"
-        ],
-        key="controller_disruption"
+    st.subheader(
+        "⚡ Operational Scenario"
     )
 
 
-    if controller_disruption != "None":
+    controller_event = st.selectbox(
+        "Scenario",
+        disruption_options,
+        key="controller_event"
+    )
 
-        scenario_prediction, _ = get_prediction(
-            selected_row,
-            controller_disruption
+
+    if controller_event != "None":
+
+        controller_prediction, _ = (
+            predict_delay(
+                selected_row,
+                controller_event
+            )
         )
 
-        scenario_prediction = max(
-            0,
-            scenario_prediction
-        )
 
-        delta = (
-            scenario_prediction
+        controller_impact = (
+            controller_prediction
             - normal_prediction
         )
 
 
-        st.metric(
-            "Scenario Forecast",
-            f"{scenario_prediction:.1f} min",
-            delta=f"{delta:+.1f} min"
-        )
+        c1, c2 = st.columns(2)
 
 
-        if delta > 0:
+        with c1:
 
-            st.warning(
-                f"{controller_disruption} could add approximately "
-                f"{delta:.1f} minutes to the forecast."
+            st.metric(
+                "Scenario Forecast",
+                f"{controller_prediction:.1f} min"
             )
 
 
-    st.markdown("### 🧠 Operational Signals")
+        with c2:
+
+            st.metric(
+                "Forecast Change",
+                f"{controller_impact:+.1f} min"
+            )
 
 
-    op_cols = st.columns(5)
+        if controller_impact > 0:
+
+            st.warning(
+                f"{controller_event} may add approximately "
+                f"{controller_impact:.1f} minutes."
+            )
 
 
-    with op_cols[0]:
+    st.subheader(
+        "🧠 Operational Signals"
+    )
+
+
+    o1, o2, o3, o4, o5 = st.columns(5)
+
+
+    with o1:
 
         st.metric(
             "Route Position",
             str(
                 selected_row.get(
                     "station_sequence",
-                    "—"
+                    "-"
                 )
             )
         )
 
 
-    with op_cols[1]:
+    with o2:
 
         st.metric(
             "Distance",
@@ -1813,7 +1697,7 @@ elif role == "🚦 Traffic Controller":
         )
 
 
-    with op_cols[2]:
+    with o3:
 
         st.metric(
             "Section Time",
@@ -1821,7 +1705,7 @@ elif role == "🚦 Traffic Controller":
         )
 
 
-    with op_cols[3]:
+    with o4:
 
         st.metric(
             "Congestion",
@@ -1829,7 +1713,7 @@ elif role == "🚦 Traffic Controller":
         )
 
 
-    with op_cols[4]:
+    with o5:
 
         st.metric(
             "Forecast",
@@ -1838,23 +1722,19 @@ elif role == "🚦 Traffic Controller":
 
 
 # ============================================================
-# MAINTENANCE OPERATOR DASHBOARD
+# MAINTENANCE OPERATOR
 # ============================================================
 
 else:
 
     st.divider()
 
-    st.markdown(
-        '<div class="section-title">🛠️ Maintenance Operator Dashboard</div>',
-        unsafe_allow_html=True
+    st.header(
+        "🛠️ Maintenance Operator Dashboard"
     )
 
-    st.markdown(
-        '<div class="section-subtitle">'
-        'Infrastructure and environmental conditions that can influence train running time.'
-        '</div>',
-        unsafe_allow_html=True
+    st.caption(
+        "Infrastructure and environmental conditions affecting train movement."
     )
 
 
@@ -1893,11 +1773,15 @@ else:
         )
 
 
-    st.markdown("### 🛤️ Infrastructure Scenario")
+    st.divider()
+
+    st.subheader(
+        "🛤️ Infrastructure Scenario"
+    )
 
 
-    maintenance_scenario = st.selectbox(
-        "Potential infrastructure event",
+    maintenance_event = st.selectbox(
+        "Potential event",
         [
             "None",
             "🚧 Speed Restriction",
@@ -1905,24 +1789,21 @@ else:
             "🚦 Signal Halt",
             "🌫️ Dense Fog"
         ],
-        key="maintenance_scenario"
+        key="maintenance_event"
     )
 
 
-    if maintenance_scenario != "None":
+    if maintenance_event != "None":
 
-        maintenance_prediction, _ = get_prediction(
-            selected_row,
-            maintenance_scenario
-        )
-
-        maintenance_prediction = max(
-            0,
-            maintenance_prediction
+        maintenance_prediction, _ = (
+            predict_delay(
+                selected_row,
+                maintenance_event
+            )
         )
 
 
-        impact = (
+        maintenance_impact = (
             maintenance_prediction
             - normal_prediction
         )
@@ -1951,25 +1832,27 @@ else:
 
             st.metric(
                 "Impact",
-                f"{impact:+.1f} min"
+                f"{maintenance_impact:+.1f} min"
             )
 
 
-        if impact > 0:
+        if maintenance_impact > 0:
 
             st.warning(
-                f"⚠️ The scenario increases the forecast by "
-                f"approximately {impact:.1f} minutes."
+                f"Expected delay increase: "
+                f"{maintenance_impact:.1f} minutes."
             )
 
 
-    st.markdown("### 🌦️ Environmental Conditions")
+    st.subheader(
+        "🌦️ Environmental Conditions"
+    )
 
 
-    env_cols = st.columns(4)
+    e1, e2, e3, e4 = st.columns(4)
 
 
-    with env_cols[0]:
+    with e1:
 
         st.metric(
             "Temperature",
@@ -1977,7 +1860,7 @@ else:
         )
 
 
-    with env_cols[1]:
+    with e2:
 
         st.metric(
             "Rainfall",
@@ -1985,7 +1868,7 @@ else:
         )
 
 
-    with env_cols[2]:
+    with e3:
 
         st.metric(
             "Visibility",
@@ -1993,7 +1876,7 @@ else:
         )
 
 
-    with env_cols[3]:
+    with e4:
 
         st.metric(
             "Congestion",
@@ -2005,13 +1888,13 @@ else:
 # FOOTER
 # ============================================================
 
-st.markdown(
-    """
-    <div class="railcast-footer">
-        RailCast • Dynamic ETA Intelligence • SIH 2026
-        <br>
-        Decision support system — final operational decisions remain with authorised railway personnel.
-    </div>
-    """,
-    unsafe_allow_html=True
+st.divider()
+
+st.caption(
+    "RailCast • Dynamic ETA Intelligence • SIH 2026"
+)
+
+st.caption(
+    "Decision-support system. Final operational decisions "
+    "remain with authorised railway personnel."
 )
