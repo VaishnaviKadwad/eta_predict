@@ -19,7 +19,15 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
+BASE_DIR = Path(__file__).resolve().parent
+BANNER_PATH = BASE_DIR / "assets" / "train_banner.png"
+if BANNER_PATH.exists():
+    st.image(
+        str(BANNER_PATH),
+        use_container_width=True
+    )
+else:
+    st.error(f"Banner not found: {BANNER_PATH}")
 
 # ============================================================
 # LOAD MODELS + DATA
