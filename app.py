@@ -636,60 +636,51 @@ next_station = str(
 # TRAIN BANNER
 # ============================================================
 
+st.markdown("### 🚆 RailCast Journey")
+
 if BANNER_PATH.exists():
 
-    st.image(
-        str(BANNER_PATH),
-        width="stretch"
-    )
+    try:
+        st.image(
+            str(BANNER_PATH),
+            use_container_width=True,
+            caption="RailCast • Dynamic ETA Intelligence"
+        )
+
+        # Debug information - remove after confirming image works
+        st.caption(
+            f"Banner loaded successfully: "
+            f"{BANNER_PATH.name} • "
+            f"{BANNER_PATH.stat().st_size / 1024:.1f} KB"
+        )
+
+    except Exception as e:
+
+        st.error(
+            f"Banner file exists, but Streamlit could not display it: {e}"
+        )
 
 else:
 
-    st.info(
-        "🚆 RailCast train banner not found. "
-        "Place the image at assets/train_banner.png"
+    st.error(
+        "❌ train_banner.png was not found by the deployed app."
     )
 
-
-# ============================================================
-# TRAIN INFORMATION
-# ============================================================
-
-train_left, train_right = st.columns(
-    [3, 1]
-)
-
-with train_left:
-
-    st.markdown(
-        f'<div class="train-heading">'
-        f'🚆 Train {selected_train}'
-        f'<span class="running">● Running</span>'
-        f'</div>',
-        unsafe_allow_html=True
+    st.write(
+        "Expected location:"
     )
 
-    st.markdown(
-        f'<div class="route">'
-        f'{current_station}'
-        f'<span class="arrow">→</span>'
-        f'{next_station}'
-        f'</div>',
-        unsafe_allow_html=True
+    st.code(
+        str(BANNER_PATH)
     )
 
-    st.caption(
-        f"Journey date: {current_row['date']}"
+    st.write(
+        "Make sure your repository contains:"
     )
 
-
-with train_right:
-
-    st.metric(
-        "Current station",
-        current_station
+    st.code(
+        "assets/train_banner.png"
     )
-
 
 # ============================================================
 # BASELINE PREDICTION
