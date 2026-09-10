@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+from PIL import Image
 
 import streamlit as st
 import pandas as pd
@@ -18,13 +19,58 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+# ============================================================
+# RAILCAST TRAIN BANNER
+# ============================================================
+
+BANNER_FILE = "assets/train_banner.png"
+
+try:
+    banner_image = Image.open(BANNER_FILE)
+    banner_image.load()
+
+    # Convert unusual PNG modes into a Streamlit-safe format
+    if banner_image.mode not in ["RGB", "RGBA"]:
+        banner_image = banner_image.convert("RGB")
+
+    st.image(
+        banner_image,
+        width="stretch"
+    )
+
+except FileNotFoundError:
+    # Fallback if Streamlit cannot find the repository file
+    st.markdown("""
+    <div style="
+        width:100%;
+        padding:28px 30px;
+        border-radius:16px;
+        background:linear-gradient(90deg,#d62828,#f77f00,#fcbf49);
+        color:white;
+        margin-bottom:20px;
+        box-shadow:0 6px 20px rgba(0,0,0,0.15);
+    ">
+        <div style="font-size:32px;font-weight:800;">
+            🚆 RailCast
+        </div>
+        <div style="font-size:18px;margin-top:6px;">
+            Dynamic ETA Intelligence for Indian Railways
+        </div>
+        <div style="font-size:14px;margin-top:12px;opacity:0.95;">
+            Predicting how delays evolve — before they arrive.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+except Exception as e:
+    st.error(f"Unable to load train banner: {e}")
 
 
 # ============================================================
 # PROJECT PATHS
 # ============================================================
 
-BASE_DIR = Path(__file__).resolve().parent
+
 
 DATA_PATH = BASE_DIR / "demo_data.csv"
 MODEL_PATH = BASE_DIR / "xgb_model.pkl"
@@ -32,8 +78,7 @@ RESIDUAL_MODEL_PATH = BASE_DIR / "residual_model.pkl"
 FEATURE_COLUMNS_PATH = BASE_DIR / "feature_columns.pkl"
 RESIDUAL_FEATURES_PATH = BASE_DIR / "residual_features.pkl"
 
-ASSETS_DIR = BASE_DIR / "assets"
-BANNER_PATH = ASSETS_DIR / "train_banner.png"
+
 
 COORDINATES_PATH = BASE_DIR / "station_coords.csv"
 
@@ -631,56 +676,6 @@ next_station = str(
     current_row["next_station"]
 )
 
-
-# ============================================================
-# TRAIN BANNER
-# ============================================================
-
-st.markdown("### 🚆 RailCast Journey")
-
-if BANNER_PATH.exists():
-
-    try:
-        st.image(
-            str(BANNER_PATH),
-            use_container_width=True,
-            caption="RailCast • Dynamic ETA Intelligence"
-        )
-
-        # Debug information - remove after confirming image works
-        st.caption(
-            f"Banner loaded successfully: "
-            f"{BANNER_PATH.name} • "
-            f"{BANNER_PATH.stat().st_size / 1024:.1f} KB"
-        )
-
-    except Exception as e:
-
-        st.error(
-            f"Banner file exists, but Streamlit could not display it: {e}"
-        )
-
-else:
-
-    st.error(
-        "❌ train_banner.png was not found by the deployed app."
-    )
-
-    st.write(
-        "Expected location:"
-    )
-
-    st.code(
-        str(BANNER_PATH)
-    )
-
-    st.write(
-        "Make sure your repository contains:"
-    )
-
-    st.code(
-        "assets/train_banner.png"
-    )
 
 # ============================================================
 # BASELINE PREDICTION
