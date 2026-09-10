@@ -1,12 +1,9 @@
-from pathlib import Path
-import os
-from PIL import Image
-
 import streamlit as st
 import pandas as pd
 import joblib
-import xgboost as xgb
 import plotly.graph_objects as go
+from pathlib import Path
+from PIL import Image
 
 # ============================================================
 # BASE DIRECTORY
@@ -31,67 +28,25 @@ st.set_page_config(
 
 BANNER_FILE = BASE_DIR / "assets" / "train_banner.png"
 
-import base64
-
-st.markdown("""
-<style>
-.railcast-banner {
-    width: 100%;
-    height: 180px;
-    border-radius: 18px;
-    overflow: hidden;
-    margin-bottom: 25px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
-
-.railcast-banner img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-}
-</style>
-""", unsafe_allow_html=True)
-
 if BANNER_FILE.exists():
+    try:
+        banner = Image.open(BANNER_FILE)
+        banner.load()
 
-    with open(BANNER_FILE, "rb") as f:
-        encoded = base64.b64encode(f.read()).decode()
+        # Make sure the image is in a standard format
+        if banner.mode not in ("RGB", "RGBA"):
+            banner = banner.convert("RGB")
 
-    st.markdown(
-        f"""
-        <div class="railcast-banner">
-            <img src="data:image/png;base64,{encoded}">
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        st.image(
+            banner,
+            width="stretch"
+        )
+
+    except Exception as e:
+        st.warning(f"Could not load banner image: {e}")
 
 else:
-
-    st.markdown("""
-    <div class="railcast-banner"
-         style="
-         background:linear-gradient(90deg,#d62828,#f77f00,#fcbf49);
-         padding:30px;
-         color:white;
-         ">
-
-        <div style="font-size:32px;font-weight:800;">
-            🚆 RailCast
-        </div>
-
-        <div style="font-size:18px;margin-top:8px;">
-            Dynamic ETA Intelligence for Indian Railways
-        </div>
-
-        <div style="font-size:14px;margin-top:12px;">
-            Predicting how delays evolve — before they arrive.
-        </div>
-
-    </div>
-    """, unsafe_allow_html=True)
-
+    st.error(f"Banner not found: {BANNER_FILE}")
 
 # ============================================================
 # PROJECT PATHS
