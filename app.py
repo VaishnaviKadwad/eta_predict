@@ -29,47 +29,68 @@ st.set_page_config(
 # RAILCAST TRAIN BANNER
 # ============================================================
 
-BANNER_FILE = "assets/train_banner.png"
+BANNER_FILE = BASE_DIR / "assets" / "train_banner.png"
 
-try:
-    banner_image = Image.open(BANNER_FILE)
-    banner_image.load()
+import base64
 
-    # Convert unusual PNG modes into a Streamlit-safe format
-    if banner_image.mode not in ["RGB", "RGBA"]:
-        banner_image = banner_image.convert("RGB")
+st.markdown("""
+<style>
+.railcast-banner {
+    width: 100%;
+    height: 180px;
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 25px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
 
-    st.image(
-        banner_image,
-        width="stretch"
+.railcast-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+</style>
+""", unsafe_allow_html=True)
+
+if BANNER_FILE.exists():
+
+    with open(BANNER_FILE, "rb") as f:
+        encoded = base64.b64encode(f.read()).decode()
+
+    st.markdown(
+        f"""
+        <div class="railcast-banner">
+            <img src="data:image/png;base64,{encoded}">
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
-except FileNotFoundError:
-    # Fallback if Streamlit cannot find the repository file
+else:
+
     st.markdown("""
-    <div style="
-        width:100%;
-        padding:28px 30px;
-        border-radius:16px;
-        background:linear-gradient(90deg,#d62828,#f77f00,#fcbf49);
-        color:white;
-        margin-bottom:20px;
-        box-shadow:0 6px 20px rgba(0,0,0,0.15);
-    ">
+    <div class="railcast-banner"
+         style="
+         background:linear-gradient(90deg,#d62828,#f77f00,#fcbf49);
+         padding:30px;
+         color:white;
+         ">
+
         <div style="font-size:32px;font-weight:800;">
             🚆 RailCast
         </div>
-        <div style="font-size:18px;margin-top:6px;">
+
+        <div style="font-size:18px;margin-top:8px;">
             Dynamic ETA Intelligence for Indian Railways
         </div>
-        <div style="font-size:14px;margin-top:12px;opacity:0.95;">
+
+        <div style="font-size:14px;margin-top:12px;">
             Predicting how delays evolve — before they arrive.
         </div>
+
     </div>
     """, unsafe_allow_html=True)
-
-except Exception as e:
-    st.error(f"Unable to load train banner: {e}")
 
 
 # ============================================================
