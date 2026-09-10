@@ -15,7 +15,7 @@ feature_columns = joblib.load("feature_columns.pkl")
 residual_features = joblib.load("residual_features.pkl")
 demo_data = pd.read_csv("demo_data.csv")
 
-# Confirmed model MAE from your evaluation
+# Confirmed validation MAE
 XGB_MAE = 7.88
 
 
@@ -36,11 +36,11 @@ readable_names = {
 }
 
 
+# ============================================================
+# EXPLAINABILITY FUNCTION
+# ============================================================
+
 def explain_row(feature_row):
-    """
-    Use the residual model's XGBoost contributions
-    to identify the strongest feature affecting the prediction.
-    """
 
     row_df = (
         feature_row[residual_features]
@@ -64,6 +64,7 @@ def explain_row(feature_row):
     )
 
     top_idx = abs(contribs).argmax()
+
     top_feature = residual_features[top_idx]
 
     direction = (
@@ -73,7 +74,10 @@ def explain_row(feature_row):
     )
 
     return (
-        readable_names.get(top_feature, top_feature),
+        readable_names.get(
+            top_feature,
+            top_feature
+        ),
         direction
     )
 
@@ -91,59 +95,58 @@ st.set_page_config(
 
 
 # ============================================================
-# CUSTOM UI
+# CUSTOM CSS
 # ============================================================
 
 st.markdown(
     """
     <style>
 
-    /* -------------------------------------------------------
+    /* ======================================================
        GLOBAL
-    ------------------------------------------------------- */
+       ====================================================== */
 
     .stApp {
-        background: #0b1118;
+        background-color: #0b1118;
     }
 
     .block-container {
         max-width: 1380px;
-        padding-top: 2rem;
+        padding-top: 1.8rem;
         padding-bottom: 3rem;
     }
 
-    /* Remove excessive Streamlit spacing */
     div[data-testid="stVerticalBlock"] {
         gap: 0.65rem;
     }
 
 
-    /* -------------------------------------------------------
+    /* ======================================================
        HEADER
-    ------------------------------------------------------- */
+       ====================================================== */
 
     .brand-row {
         display: flex;
         align-items: center;
         gap: 14px;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
     }
 
     .brand-mark {
         width: 46px;
         height: 46px;
         border-radius: 10px;
-        background: #c62828;
+        background-color: #c62828;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 25px;
+        font-size: 24px;
     }
 
     .brand-name {
-        font-size: 2.4rem;
+        font-size: 2.45rem;
         font-weight: 800;
-        letter-spacing: -1px;
+        letter-spacing: -1.2px;
         color: #f4f7fa;
         line-height: 1;
     }
@@ -151,248 +154,263 @@ st.markdown(
     .brand-subtitle {
         color: #8d99a6;
         font-size: 0.98rem;
-        margin: 5px 0 25px 60px;
+        margin-left: 60px;
+        margin-bottom: 27px;
     }
 
 
-    /* -------------------------------------------------------
-       SECTION HEADERS
-       ------------------------------------------------------- */
+    /* ======================================================
+       SECTION HEADINGS
+       ====================================================== */
 
     .section-heading {
         font-size: 1.15rem;
-        font-weight: 700;
-        color: #e7edf2;
+        font-weight: 750;
+        color: #e8edf1;
         margin-top: 12px;
-        margin-bottom: 8px;
+        margin-bottom: 5px;
     }
 
     .section-description {
         color: #8996a3;
-        font-size: 0.88rem;
-        margin-bottom: 14px;
+        font-size: 0.86rem;
+        margin-bottom: 13px;
     }
 
 
-    /* -------------------------------------------------------
-       JOURNEY CARD
-       ------------------------------------------------------- */
+    /* ======================================================
+       JOURNEY CARDS
+       ====================================================== */
 
     .journey-panel {
-        background: #111923;
+        background-color: #111923;
         border: 1px solid #26313c;
-        border-radius: 12px;
-        padding: 18px 20px;
-        margin: 5px 0 18px 0;
+        border-radius: 11px;
+        padding: 17px 19px;
+        margin-top: 4px;
+        margin-bottom: 7px;
+        min-height: 80px;
     }
 
     .journey-label {
         color: #778592;
-        font-size: 0.70rem;
-        font-weight: 700;
+        font-size: 0.68rem;
+        font-weight: 750;
         letter-spacing: 1px;
         text-transform: uppercase;
-        margin-bottom: 5px;
+        margin-bottom: 7px;
     }
 
     .journey-value {
         color: #f1f5f8;
-        font-size: 1.18rem;
+        font-size: 1.13rem;
         font-weight: 700;
     }
 
     .journey-route {
         color: #f1f5f8;
-        font-size: 1.35rem;
-        font-weight: 750;
+        font-size: 1.28rem;
+        font-weight: 800;
     }
 
     .journey-arrow {
-        color: #c62828;
-        padding: 0 8px;
+        color: #d33a3a;
+        padding: 0 7px;
     }
 
 
-    /* -------------------------------------------------------
-       ROUTE GRAPHIC
-       ------------------------------------------------------- */
+    /* ======================================================
+       ROUTE PANEL
+       ====================================================== */
 
-    .route-box {
-        background: #0f171f;
-        border: 1px solid #25313c;
-        border-radius: 12px;
-        padding: 20px 22px 17px 22px;
-        margin: 8px 0 20px 0;
+    .route-panel {
+        background-color: #101820;
+        border: 1px solid #26323d;
+        border-radius: 11px;
+        padding: 17px 20px;
+        margin-top: 7px;
+        margin-bottom: 18px;
     }
 
-    .route-title {
-        color: #aab5bf;
-        font-size: 0.78rem;
-        font-weight: 700;
-        letter-spacing: 0.8px;
+    .route-heading {
+        color: #9aa6b1;
+        font-size: 0.72rem;
+        font-weight: 750;
+        letter-spacing: 1px;
         text-transform: uppercase;
-        margin-bottom: 17px;
+        margin-bottom: 10px;
     }
 
-    .route-line {
-        position: relative;
-        height: 42px;
-        margin: 0 22px;
-    }
-
-    .route-track {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 13px;
-        height: 3px;
-        background: #3a4652;
-    }
-
-    .route-progress {
-        position: absolute;
-        left: 0;
-        top: 13px;
-        height: 3px;
-        background: #c62828;
-    }
-
-    .station {
-        position: absolute;
-        top: 5px;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        border: 3px solid #0f171f;
-        background: #66727e;
-        box-shadow: 0 0 0 1px #66727e;
-    }
-
-    .station.active {
-        background: #c62828;
-        box-shadow: 0 0 0 2px #c62828;
-    }
-
-    .station-label {
-        position: absolute;
-        top: 29px;
-        font-size: 0.73rem;
-        color: #84909b;
-        white-space: nowrap;
-    }
-
-    .station-label.active-label {
-        color: #f0f3f5;
-        font-weight: 700;
+    .route-current {
+        color: #e9eef2;
+        font-size: 0.9rem;
+        margin-top: 3px;
     }
 
 
-    /* -------------------------------------------------------
+    /* ======================================================
        PREDICTION CARDS
-       ------------------------------------------------------- */
+       ====================================================== */
 
     .prediction-card {
-        background: #111923;
+        background-color: #111923;
         border: 1px solid #293540;
         border-radius: 12px;
-        padding: 20px;
-        min-height: 150px;
+        padding: 19px 20px;
+        min-height: 145px;
     }
 
-    .prediction-card.highlight {
+    .prediction-card.primary {
         border-left: 4px solid #c62828;
     }
 
     .prediction-label {
         color: #84919d;
-        font-size: 0.73rem;
-        font-weight: 700;
-        letter-spacing: 0.8px;
+        font-size: 0.69rem;
+        font-weight: 750;
+        letter-spacing: 0.9px;
         text-transform: uppercase;
     }
 
     .prediction-number {
         color: #f5f7f9;
-        font-size: 2.35rem;
-        font-weight: 800;
+        font-size: 2.3rem;
+        font-weight: 850;
         line-height: 1.15;
-        margin: 9px 0 3px 0;
+        margin-top: 9px;
     }
 
     .prediction-unit {
-        color: #88949f;
-        font-size: 0.88rem;
+        color: #8995a0;
+        font-size: 0.84rem;
     }
 
     .prediction-delta {
-        color: #d8a12d;
-        font-size: 0.85rem;
-        font-weight: 700;
+        color: #e0b447;
+        font-size: 0.84rem;
+        font-weight: 750;
         margin-top: 8px;
     }
 
+    .prediction-note {
+        color: #76838f;
+        font-size: 0.73rem;
+        margin-top: 6px;
+    }
 
-    /* -------------------------------------------------------
-       IMPACT BAR
-       ------------------------------------------------------- */
+
+    /* ======================================================
+       DISRUPTION PANEL
+       ====================================================== */
+
+    .scenario-panel {
+        background-color: #191814;
+        border: 1px solid #554a24;
+        border-radius: 11px;
+        padding: 14px 17px;
+        margin: 8px 0 14px 0;
+    }
+
+    .scenario-title {
+        color: #e2bd54;
+        font-size: 0.9rem;
+        font-weight: 750;
+    }
+
+    .scenario-text {
+        color: #aaa38e;
+        font-size: 0.82rem;
+        margin-top: 4px;
+        line-height: 1.45;
+    }
+
+
+    /* ======================================================
+       IMPACT PANEL
+       ====================================================== */
 
     .impact-panel {
-        background: #111923;
+        background-color: #111923;
         border: 1px solid #293540;
-        border-radius: 12px;
-        padding: 18px 20px;
+        border-radius: 11px;
+        padding: 16px 19px;
         margin-top: 8px;
+        margin-bottom: 15px;
     }
 
     .impact-title {
-        color: #e7edf2;
-        font-weight: 700;
-        font-size: 0.92rem;
-        margin-bottom: 10px;
+        color: #e8edf1;
+        font-size: 0.9rem;
+        font-weight: 750;
+        margin-bottom: 9px;
     }
 
-    .impact-track {
-        height: 9px;
-        background: #27323c;
-        border-radius: 10px;
-        overflow: hidden;
-        margin: 8px 0;
-    }
-
-    .impact-fill {
-        height: 100%;
-        background: #c62828;
-        border-radius: 10px;
-    }
-
-    .impact-caption {
-        color: #7f8b96;
+    .impact-row {
+        display: flex;
+        justify-content: space-between;
+        color: #8995a0;
         font-size: 0.78rem;
     }
 
+    .impact-number {
+        color: #e8edf1;
+        font-weight: 750;
+    }
 
-    /* -------------------------------------------------------
-       INFO / EXPLANATION
-       ------------------------------------------------------- */
+
+    /* ======================================================
+       OPERATING CONDITIONS
+       ====================================================== */
+
+    .condition-card {
+        background-color: #111923;
+        border: 1px solid #293540;
+        border-radius: 10px;
+        padding: 13px 14px;
+        min-height: 77px;
+    }
+
+    .condition-label {
+        color: #788590;
+        font-size: 0.67rem;
+        font-weight: 750;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+    }
+
+    .condition-value {
+        color: #edf1f4;
+        font-size: 0.94rem;
+        font-weight: 700;
+        margin-top: 5px;
+        line-height: 1.25;
+    }
+
+
+    /* ======================================================
+       EXPLANATION
+       ====================================================== */
 
     .explanation-panel {
-        background: #101820;
+        background-color: #101820;
         border: 1px solid #28343e;
-        border-radius: 12px;
-        padding: 18px 20px;
+        border-radius: 11px;
+        padding: 17px 19px;
         margin-top: 10px;
+        margin-bottom: 16px;
     }
 
     .explanation-title {
         color: #e8edf1;
-        font-weight: 700;
-        margin-bottom: 8px;
+        font-weight: 750;
+        font-size: 0.93rem;
+        margin-bottom: 7px;
     }
 
     .explanation-text {
         color: #a9b3bc;
-        font-size: 0.91rem;
-        line-height: 1.5;
+        font-size: 0.86rem;
+        line-height: 1.55;
     }
 
     .explanation-highlight {
@@ -401,64 +419,12 @@ st.markdown(
     }
 
 
-    /* -------------------------------------------------------
-       OPERATING CONDITIONS
-       ------------------------------------------------------- */
-
-    .condition-card {
-        background: #111923;
-        border: 1px solid #293540;
-        border-radius: 10px;
-        padding: 13px 15px;
-        min-height: 80px;
-    }
-
-    .condition-label {
-        color: #7f8b96;
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.7px;
-    }
-
-    .condition-value {
-        color: #edf1f4;
-        font-size: 1rem;
-        font-weight: 700;
-        margin-top: 4px;
-    }
-
-
-    /* -------------------------------------------------------
-       SCENARIO
-       ------------------------------------------------------- */
-
-    .scenario-panel {
-        background: #181713;
-        border: 1px solid #554922;
-        border-radius: 12px;
-        padding: 15px 18px;
-        margin: 10px 0 15px 0;
-    }
-
-    .scenario-title {
-        color: #e2bf5a;
-        font-weight: 700;
-        font-size: 0.9rem;
-    }
-
-    .scenario-text {
-        color: #aaa28c;
-        font-size: 0.84rem;
-        margin-top: 5px;
-    }
-
-
-    /* -------------------------------------------------------
+    /* ======================================================
        SIDEBAR
-       ------------------------------------------------------- */
+       ====================================================== */
 
     section[data-testid="stSidebar"] {
-        background: #080d13;
+        background-color: #080d13;
         border-right: 1px solid #1e2933;
     }
 
@@ -470,36 +436,36 @@ st.markdown(
 
     .sidebar-caption {
         color: #77838e;
-        font-size: 0.8rem;
+        font-size: 0.79rem;
     }
 
     .sidebar-status {
         border: 1px solid #27323b;
-        background: #10171e;
+        background-color: #10171e;
         border-radius: 9px;
         padding: 12px;
         margin-top: 12px;
     }
 
-    .status-dot {
-        color: #58a66b;
-        font-size: 0.8rem;
-        font-weight: 700;
+    .status-online {
+        color: #62ae72;
+        font-size: 0.76rem;
+        font-weight: 750;
     }
 
     .status-detail {
         color: #788590;
-        font-size: 0.74rem;
+        font-size: 0.72rem;
         margin-top: 3px;
     }
 
 
-    /* -------------------------------------------------------
+    /* ======================================================
        STREAMLIT CONTROLS
-       ------------------------------------------------------- */
+       ====================================================== */
 
     div[data-baseweb="select"] > div {
-        background: #111923;
+        background-color: #111923;
         border-color: #303c47;
     }
 
@@ -511,13 +477,17 @@ st.markdown(
     }
 
     .stMetric {
-        background: #111923;
+        background-color: #111923;
         border: 1px solid #293540;
         border-radius: 10px;
         padding: 10px;
     }
 
-    /* Hide Streamlit footer */
+
+    /* ======================================================
+       FOOTER
+       ====================================================== */
+
     footer {
         visibility: hidden;
     }
@@ -540,7 +510,7 @@ st.sidebar.markdown(
     </div>
 
     <div class="sidebar-status">
-        <div class="status-dot">● MODEL ONLINE</div>
+        <div class="status-online">● MODEL ONLINE</div>
         <div class="status-detail">
             XGBoost prediction engine
         </div>
@@ -555,7 +525,10 @@ st.sidebar.markdown("### Dashboard")
 
 view_mode = st.sidebar.radio(
     "Dashboard view",
-    ["Passenger", "Control Room / Officer"],
+    [
+        "Passenger",
+        "Control Room / Officer"
+    ],
     label_visibility="collapsed"
 )
 
@@ -564,7 +537,7 @@ st.sidebar.divider()
 st.sidebar.markdown("### Model reference")
 
 st.sidebar.caption(
-    f"Test MAE: ±{XGB_MAE:.2f} minutes"
+    f"Validation MAE: {XGB_MAE:.2f} minutes"
 )
 
 st.sidebar.caption(
@@ -574,20 +547,27 @@ st.sidebar.caption(
 st.sidebar.divider()
 
 st.sidebar.caption(
-    "RailCast is a decision-support prototype. "
-    "Operational actions remain with authorised railway staff."
+    "Decision-support prototype. Operational actions "
+    "remain with authorised railway staff."
 )
 
 
 # ============================================================
-# HEADER
+# MAIN HEADER
 # ============================================================
 
 st.markdown(
     """
     <div class="brand-row">
-        <div class="brand-mark">🚆</div>
-        <div class="brand-name">RailCast</div>
+
+        <div class="brand-mark">
+            🚆
+        </div>
+
+        <div class="brand-name">
+            RailCast
+        </div>
+
     </div>
 
     <div class="brand-subtitle">
@@ -610,22 +590,37 @@ st.markdown(
 
 st.markdown(
     '<div class="section-description">'
-    'Choose a train and the section of its journey you want to analyse.'
+    'Choose a train and the section of its journey to analyse.'
     '</div>',
     unsafe_allow_html=True
 )
 
-select_col1, select_col2 = st.columns([1, 1.6])
+select_col1, select_col2 = st.columns(
+    [1, 1.7]
+)
+
+
+# ------------------------------------------------------------
+# TRAIN
+# ------------------------------------------------------------
 
 with select_col1:
 
-    train_options = demo_data["train"].unique()
+    train_options = (
+        demo_data["train"]
+        .dropna()
+        .unique()
+    )
 
     selected_train = st.selectbox(
         "Train",
         train_options
     )
 
+
+# ------------------------------------------------------------
+# FILTER TRAIN DATA
+# ------------------------------------------------------------
 
 train_rows = (
     demo_data[
@@ -635,28 +630,39 @@ train_rows = (
 )
 
 
+# ------------------------------------------------------------
+# JOURNEY POINT
+# ------------------------------------------------------------
+
 with select_col2:
 
     row_index = st.selectbox(
         "Journey point",
         train_rows.index,
         format_func=lambda i:
-            f'{train_rows.loc[i, "station"]} → '
-            f'{train_rows.loc[i, "next_station"]} '
-            f'({train_rows.loc[i, "date"]})'
+            (
+                f'{train_rows.loc[i, "station"]} '
+                f'→ '
+                f'{train_rows.loc[i, "next_station"]} '
+                f'({train_rows.loc[i, "date"]})'
+            )
     )
 
 
 # ============================================================
 # IMPORTANT:
-# current_row MUST be created before using current_row[...]
+# CREATE current_row BEFORE USING IT ANYWHERE
 # ============================================================
 
-current_row = train_rows.loc[row_index].copy()
+current_row = (
+    train_rows
+    .loc[row_index]
+    .copy()
+)
 
 
 # ============================================================
-# JOURNEY SUMMARY
+# CURRENT JOURNEY
 # ============================================================
 
 st.markdown(
@@ -664,40 +670,79 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-j1, j2, j3 = st.columns([0.9, 1.5, 0.9])
+j1, j2, j3 = st.columns(
+    [0.9, 1.5, 0.9]
+)
+
+
+# ------------------------------------------------------------
+# TRAIN CARD
+# ------------------------------------------------------------
 
 with j1:
+
     st.markdown(
         f"""
         <div class="journey-panel">
-            <div class="journey-label">Train</div>
-            <div class="journey-value">🚆 {selected_train}</div>
+
+            <div class="journey-label">
+                Train
+            </div>
+
+            <div class="journey-value">
+                🚆 {selected_train}
+            </div>
+
         </div>
         """,
         unsafe_allow_html=True
     )
 
+
+# ------------------------------------------------------------
+# ROUTE CARD
+# ------------------------------------------------------------
+
 with j2:
+
     st.markdown(
         f"""
         <div class="journey-panel">
-            <div class="journey-label">Current section</div>
+
+            <div class="journey-label">
+                Current section
+            </div>
+
             <div class="journey-route">
                 {current_row["station"]}
                 <span class="journey-arrow">→</span>
                 {current_row["next_station"]}
             </div>
+
         </div>
         """,
         unsafe_allow_html=True
     )
 
+
+# ------------------------------------------------------------
+# DATE CARD
+# ------------------------------------------------------------
+
 with j3:
+
     st.markdown(
         f"""
         <div class="journey-panel">
-            <div class="journey-label">Journey date</div>
-            <div class="journey-value">📅 {current_row["date"]}</div>
+
+            <div class="journey-label">
+                Journey date
+            </div>
+
+            <div class="journey-value">
+                📅 {current_row["date"]}
+            </div>
+
         </div>
         """,
         unsafe_allow_html=True
@@ -705,12 +750,27 @@ with j3:
 
 
 # ============================================================
-# ROUTE VISUALISATION
+# ROUTE PROGRESS
 # ============================================================
+
+st.markdown(
+    """
+    <div class="route-panel">
+
+        <div class="route-heading">
+            Route progress
+        </div>
+
+    """,
+    unsafe_allow_html=True
+)
+
 
 try:
 
-    current_position = float(current_row["station_sequence"])
+    current_position = float(
+        current_row["station_sequence"]
+    )
 
     sequence_values = pd.to_numeric(
         train_rows["station_sequence"],
@@ -720,89 +780,125 @@ try:
     min_sequence = sequence_values.min()
     max_sequence = sequence_values.max()
 
-    if max_sequence > min_sequence:
+    if (
+        pd.notna(min_sequence)
+        and
+        pd.notna(max_sequence)
+        and
+        max_sequence > min_sequence
+    ):
+
         progress = (
             (current_position - min_sequence)
-            / (max_sequence - min_sequence)
+            /
+            (max_sequence - min_sequence)
         )
+
     else:
+
         progress = 0.5
 
-    progress = max(0.08, min(0.92, progress))
+    progress = max(
+        0.0,
+        min(1.0, progress)
+    )
 
 except Exception:
+
     progress = 0.5
 
 
-route_stations = train_rows["station"].dropna().astype(str).tolist()
+route_stations = (
+    train_rows["station"]
+    .dropna()
+    .astype(str)
+    .tolist()
+)
+
 
 if len(route_stations) >= 2:
 
     first_station = route_stations[0]
     last_station = route_stations[-1]
 
-    progress_percent = progress * 100
+else:
 
-    route_html = f"""
-    <div class="route-box">
+    first_station = str(
+        current_row["station"]
+    )
 
-        <div class="route-title">
-            Route progress
-        </div>
+    last_station = str(
+        current_row["next_station"]
+    )
 
-        <div class="route-line">
 
-            <div class="route-track"></div>
+route_left, route_middle, route_right = st.columns(
+    [1, 5, 1]
+)
 
-            <div
-                class="route-progress"
-                style="width:{progress_percent:.1f}%">
-            </div>
 
-            <div
-                class="station active"
-                style="left:0%;">
-            </div>
-
-            <div
-                class="station active"
-                style="left:{progress_percent:.1f}%;
-                       transform:translateX(-50%);">
-            </div>
-
-            <div
-                class="station"
-                style="right:0%;">
-            </div>
-
-            <div
-                class="station-label active-label"
-                style="left:0%;">
-                {first_station}
-            </div>
-
-            <div
-                class="station-label active-label"
-                style="left:{progress_percent:.1f}%;
-                       transform:translateX(-50%);">
-                {current_row["station"]}
-            </div>
-
-            <div
-                class="station-label"
-                style="right:0%;">
-                {last_station}
-            </div>
-
-        </div>
-
-    </div>
-    """
+with route_left:
 
     st.markdown(
-        route_html,
+        f"""
+        <div style="
+            color:#e8edf1;
+            font-size:0.86rem;
+            font-weight:700;
+            padding-top:8px;
+        ">
+            ● {first_station}
+        </div>
+        """,
         unsafe_allow_html=True
     )
+
+
+with route_middle:
+
+    st.progress(
+        progress
+    )
+
+    progress_percent = int(
+        progress * 100
+    )
+
+    st.markdown(
+        f"""
+        <div class="route-current">
+            <b>{current_row["station"]}</b>
+            → {current_row["next_station"]}
+            &nbsp;&nbsp;·&nbsp;&nbsp;
+            {progress_percent}% along selected route
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+with route_right:
+
+    st.markdown(
+        f"""
+        <div style="
+            color:#e8edf1;
+            font-size:0.86rem;
+            font-weight:700;
+            text-align:right;
+            padding-top:8px;
+        ">
+            {last_station} ●
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+st.markdown(
+    "</div>",
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
@@ -816,10 +912,11 @@ st.markdown(
 
 st.markdown(
     '<div class="section-description">'
-    'Inject a disruption and see how the predicted delay changes.'
+    'Inject an operating disruption and see how the forecast changes.'
     '</div>',
     unsafe_allow_html=True
 )
+
 
 disruption = st.selectbox(
     "Select operating scenario",
@@ -843,10 +940,16 @@ sim_row = current_row.copy()
 
 disruption_note = ""
 
-sim_weather_label = current_row[
-    "weather_condition_passenger"
-]
+sim_weather_label = (
+    current_row[
+        "weather_condition_passenger"
+    ]
+)
 
+
+# ------------------------------------------------------------
+# FOG
+# ------------------------------------------------------------
 
 if disruption == "Fog":
 
@@ -857,112 +960,169 @@ if disruption == "Fog":
     )
 
     disruption_note = (
-        "Visibility reduced to 150 m, representing dense fog."
+        "Visibility reduced to 150 m, "
+        "representing dense fog conditions."
     )
 
     sim_weather_label = "Foggy"
 
+
+# ------------------------------------------------------------
+# HEAVY RAIN
+# ------------------------------------------------------------
 
 elif disruption == "Heavy Rain / Storm":
 
     sim_row["rainfall_mm"] = 80
 
     disruption_note = (
-        "Rainfall increased to 80 mm, representing "
-        "storm-level rainfall."
+        "Rainfall increased to 80 mm, "
+        "representing storm-level rainfall."
     )
 
     sim_weather_label = "Heavy Rain / Storm"
 
 
+# ------------------------------------------------------------
+# SPEED RESTRICTION
+# ------------------------------------------------------------
+
 elif disruption == "Speed Restriction":
 
     sim_row["historical_section_time"] = (
-        sim_row["historical_section_time"] * 1.5
+        sim_row["historical_section_time"]
+        * 1.5
     )
 
     disruption_note = (
-        "Expected section running time increased by 50% "
-        "because of a temporary speed restriction."
+        "Expected section running time increased "
+        "by 50% because of a temporary speed restriction."
     )
 
-    sim_weather_label = "Speed Restriction in effect"
+    sim_weather_label = (
+        "Speed Restriction in effect"
+    )
 
+
+# ------------------------------------------------------------
+# SIGNAL HALT
+# ------------------------------------------------------------
 
 elif disruption == "Signal Halt / Unscheduled Stoppage":
 
     sim_row["delay_minutes"] = (
-        sim_row["delay_minutes"] + 25
+        sim_row["delay_minutes"]
+        + 25
     )
 
     disruption_note = (
-        "An additional 25-minute signal halt was introduced."
+        "An additional 25-minute signal halt "
+        "was introduced."
     )
 
-    sim_weather_label = "Signal Halt in effect"
+    sim_weather_label = (
+        "Signal Halt in effect"
+    )
 
+
+# ------------------------------------------------------------
+# CONGESTION
+# ------------------------------------------------------------
 
 elif disruption == "Track Congestion Spike":
 
     sim_row["congestion_score"] = 0.95
 
     disruption_note = (
-        "Downstream congestion increased to a near-maximum level."
+        "Downstream congestion increased "
+        "to a near-maximum level."
     )
 
-    sim_weather_label = "Track Congestion Spike"
+    sim_weather_label = (
+        "Track Congestion Spike"
+    )
 
+
+# ------------------------------------------------------------
+# MAINTENANCE
+# ------------------------------------------------------------
 
 elif disruption == "Unscheduled Maintenance Block":
 
     sim_row["delay_minutes"] = (
-        sim_row["delay_minutes"] + 45
+        sim_row["delay_minutes"]
+        + 45
     )
 
     disruption_note = (
-        "An unscheduled maintenance block adding 45 minutes "
-        "was introduced."
+        "An unscheduled maintenance block "
+        "adding 45 minutes was introduced."
     )
 
-    sim_weather_label = "Maintenance Block in effect"
+    sim_weather_label = (
+        "Maintenance Block in effect"
+    )
 
 
 # ============================================================
-# PREDICTIONS
+# BASELINE PREDICTION
 # ============================================================
 
 X_original = (
     pd.DataFrame(
-        [current_row[feature_columns]]
+        [
+            current_row[
+                feature_columns
+            ]
+        ]
     )
     .apply(pd.to_numeric)
 )
 
+
 original_predicted_delay = (
-    xgb_model.predict(X_original)[0]
+    xgb_model.predict(
+        X_original
+    )[0]
 )
 
+
+# ============================================================
+# DISRUPTION PREDICTION
+# ============================================================
 
 X_input = (
     pd.DataFrame(
-        [sim_row[feature_columns]]
+        [
+            sim_row[
+                feature_columns
+            ]
+        ]
     )
     .apply(pd.to_numeric)
 )
 
+
 predicted_delay = (
-    xgb_model.predict(X_input)[0]
+    xgb_model.predict(
+        X_input
+    )[0]
 )
 
 
+# ============================================================
+# DELAY DIFFERENCE
+# ============================================================
+
 delay_change = (
-    predicted_delay -
+    predicted_delay
+    -
     original_predicted_delay
 )
 
 
 # ============================================================
-# SCENARIO MESSAGE
+# SCENARIO INFORMATION
 # ============================================================
 
 if disruption != "None":
@@ -986,7 +1146,7 @@ if disruption != "None":
 
 
 # ============================================================
-# PREDICTION
+# ETA FORECAST
 # ============================================================
 
 st.markdown(
@@ -995,8 +1155,14 @@ st.markdown(
 )
 
 
-p1, p2, p3 = st.columns([1, 1, 0.85])
+p1, p2, p3 = st.columns(
+    [1, 1, 0.9]
+)
 
+
+# ------------------------------------------------------------
+# CURRENT CONDITIONS
+# ------------------------------------------------------------
 
 with p1:
 
@@ -1022,16 +1188,20 @@ with p1:
     )
 
 
+# ------------------------------------------------------------
+# SCENARIO PREDICTION
+# ------------------------------------------------------------
+
 with p2:
 
     if disruption != "None":
 
         st.markdown(
             f"""
-            <div class="prediction-card highlight">
+            <div class="prediction-card primary">
 
                 <div class="prediction-label">
-                    With {disruption}
+                    With selected disruption
                 </div>
 
                 <div class="prediction-number">
@@ -1055,7 +1225,7 @@ with p2:
 
         st.markdown(
             f"""
-            <div class="prediction-card highlight">
+            <div class="prediction-card primary">
 
                 <div class="prediction-label">
                     Current prediction
@@ -1075,10 +1245,19 @@ with p2:
         )
 
 
+# ------------------------------------------------------------
+# ESTIMATED RANGE
+# ------------------------------------------------------------
+
 with p3:
 
-    lower = predicted_delay - XGB_MAE
-    upper = predicted_delay + XGB_MAE
+    lower_range = (
+        predicted_delay - XGB_MAE
+    )
+
+    upper_range = (
+        predicted_delay + XGB_MAE
+    )
 
     st.markdown(
         f"""
@@ -1088,18 +1267,20 @@ with p3:
                 Estimated range
             </div>
 
-            <div class="prediction-number"
-                 style="font-size:1.75rem;">
-                {lower:.0f}–{upper:.0f}
+            <div
+                class="prediction-number"
+                style="font-size:1.8rem;"
+            >
+                {lower_range:.0f}–{upper_range:.0f}
             </div>
 
             <div class="prediction-unit">
                 minutes
             </div>
 
-            <div class="prediction-delta"
-                 style="color:#8a98a5;">
-                based on ±{XGB_MAE:.2f} min MAE
+            <div class="prediction-note">
+                Based on validation MAE of
+                ±{XGB_MAE:.2f} min
             </div>
 
         </div>
@@ -1109,18 +1290,26 @@ with p3:
 
 
 # ============================================================
-# DELAY IMPACT GRAPHIC
+# DISRUPTION IMPACT VISUAL
 # ============================================================
 
 if disruption != "None":
 
-    # Keep the bar visually meaningful without inventing a maximum.
-    impact_ratio = abs(delay_change) / max(
+    denominator = max(
         abs(original_predicted_delay) + 20,
         20
     )
 
-    impact_ratio = min(impact_ratio, 1.0)
+    impact_ratio = (
+        abs(delay_change)
+        /
+        denominator
+    )
+
+    impact_ratio = min(
+        impact_ratio,
+        1.0
+    )
 
     st.markdown(
         f"""
@@ -1130,19 +1319,46 @@ if disruption != "None":
                 Disruption impact
             </div>
 
-            <div class="impact-track">
-                <div
-                    class="impact-fill"
-                    style="width:{impact_ratio * 100:.1f}%;">
-                </div>
+            <div class="impact-row">
+
+                <span>
+                    Normal forecast
+                </span>
+
+                <span class="impact-number">
+                    {original_predicted_delay:.1f} min
+                </span>
+
             </div>
 
-            <div class="impact-caption">
-                Forecast changes from
-                <b>{original_predicted_delay:.1f} min</b>
-                to
-                <b>{predicted_delay:.1f} min</b>
-                under the selected scenario.
+            <div style="
+                margin:10px 0;
+                background:#27323c;
+                height:9px;
+                border-radius:8px;
+                overflow:hidden;
+            ">
+
+                <div style="
+                    width:{impact_ratio * 100:.1f}%;
+                    height:100%;
+                    background:#c62828;
+                    border-radius:8px;
+                ">
+                </div>
+
+            </div>
+
+            <div class="impact-row">
+
+                <span>
+                    Scenario forecast
+                </span>
+
+                <span class="impact-number">
+                    {predicted_delay:.1f} min
+                </span>
+
             </div>
 
         </div>
@@ -1160,23 +1376,39 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-c1, c2, c3, c4 = st.columns(4)
 
-with c1:
+condition1, condition2, condition3, condition4 = st.columns(4)
+
+
+# ------------------------------------------------------------
+# WEATHER
+# ------------------------------------------------------------
+
+with condition1:
 
     st.markdown(
         f"""
         <div class="condition-card">
-            <div class="condition-label">Weather</div>
+
+            <div class="condition-label">
+                Weather
+            </div>
+
             <div class="condition-value">
                 {sim_weather_label}
             </div>
+
         </div>
         """,
         unsafe_allow_html=True
     )
 
-with c2:
+
+# ------------------------------------------------------------
+# VISIBILITY
+# ------------------------------------------------------------
+
+with condition2:
 
     visibility = sim_row.get(
         "visibility_m",
@@ -1184,23 +1416,38 @@ with c2:
     )
 
     if pd.notna(visibility):
-        visibility_text = f"{float(visibility):.0f} m"
+
+        visibility_text = (
+            f"{float(visibility):.0f} m"
+        )
+
     else:
+
         visibility_text = "—"
 
     st.markdown(
         f"""
         <div class="condition-card">
-            <div class="condition-label">Visibility</div>
+
+            <div class="condition-label">
+                Visibility
+            </div>
+
             <div class="condition-value">
                 {visibility_text}
             </div>
+
         </div>
         """,
         unsafe_allow_html=True
     )
 
-with c3:
+
+# ------------------------------------------------------------
+# CONGESTION
+# ------------------------------------------------------------
+
+with condition3:
 
     congestion = sim_row.get(
         "congestion_score",
@@ -1208,23 +1455,38 @@ with c3:
     )
 
     if pd.notna(congestion):
-        congestion_text = f"{float(congestion):.2f}"
+
+        congestion_text = (
+            f"{float(congestion):.2f}"
+        )
+
     else:
+
         congestion_text = "—"
 
     st.markdown(
         f"""
         <div class="condition-card">
-            <div class="condition-label">Congestion</div>
+
+            <div class="condition-label">
+                Congestion
+            </div>
+
             <div class="condition-value">
                 {congestion_text}
             </div>
+
         </div>
         """,
         unsafe_allow_html=True
     )
 
-with c4:
+
+# ------------------------------------------------------------
+# SECTION TIME
+# ------------------------------------------------------------
+
+with condition4:
 
     section_time = sim_row.get(
         "historical_section_time",
@@ -1232,17 +1494,27 @@ with c4:
     )
 
     if pd.notna(section_time):
-        section_text = f"{float(section_time):.1f} min"
+
+        section_text = (
+            f"{float(section_time):.1f} min"
+        )
+
     else:
+
         section_text = "—"
 
     st.markdown(
         f"""
         <div class="condition-card">
-            <div class="condition-label">Section time</div>
+
+            <div class="condition-label">
+                Section time
+            </div>
+
             <div class="condition-value">
                 {section_text}
             </div>
+
         </div>
         """,
         unsafe_allow_html=True
@@ -1250,10 +1522,12 @@ with c4:
 
 
 # ============================================================
-# WHY DID THE PREDICTION CHANGE?
+# EXPLAINABILITY
 # ============================================================
 
-top_feature, direction = explain_row(sim_row)
+top_feature, direction = explain_row(
+    sim_row
+)
 
 
 if view_mode == "Passenger":
@@ -1263,7 +1537,7 @@ if view_mode == "Passenger":
         <div class="explanation-panel">
 
             <div class="explanation-title">
-                Why this prediction?
+                ℹ Why this prediction?
             </div>
 
         """,
@@ -1291,6 +1565,7 @@ if view_mode == "Passenger":
             </span>.
 
         </div>
+
         </div>
         """,
         unsafe_allow_html=True
@@ -1323,7 +1598,7 @@ else:
 
             <br><br>
 
-            Weather condition:
+            Weather:
             <span class="explanation-highlight">
                 {sim_weather_label}
             </span>
@@ -1350,6 +1625,7 @@ else:
             </span>
 
         </div>
+
         </div>
         """,
         unsafe_allow_html=True
@@ -1367,13 +1643,17 @@ st.markdown(
 
 st.markdown(
     '<div class="section-description">'
-    'Record the actual delay experienced by the passenger. '
-    'This creates a feedback dataset for future model evaluation and retraining.'
+    'Record the actual delay experienced. This creates a feedback '
+    'dataset for future evaluation and model improvement.'
     '</div>',
     unsafe_allow_html=True
 )
 
-feedback_col1, feedback_col2 = st.columns([1, 2])
+
+feedback_col1, feedback_col2 = st.columns(
+    [1, 2]
+)
+
 
 with feedback_col1:
 
@@ -1383,6 +1663,7 @@ with feedback_col1:
         value=0.0,
         step=1.0
     )
+
 
 with feedback_col2:
 
@@ -1394,13 +1675,15 @@ with feedback_col2:
     ):
 
         feedback_row = pd.DataFrame(
-            [{
-                "train": selected_train,
-                "station": current_row["station"],
-                "predicted_delay": predicted_delay,
-                "actual_delay": actual_delay_input,
-                "submitted_at": pd.Timestamp.now()
-            }]
+            [
+                {
+                    "train": selected_train,
+                    "station": current_row["station"],
+                    "predicted_delay": predicted_delay,
+                    "actual_delay": actual_delay_input,
+                    "submitted_at": pd.Timestamp.now()
+                }
+            ]
         )
 
         feedback_row.to_csv(
@@ -1428,12 +1711,14 @@ st.markdown(
     <div style="
         text-align:center;
         color:#64717d;
-        font-size:0.76rem;
-        padding:8px 0 15px 0;
+        font-size:0.75rem;
+        padding:7px 0 15px 0;
     ">
+
         RailCast · Dynamic ETA Forecasting Prototype
-        &nbsp;•&nbsp;
+        &nbsp; • &nbsp;
         Predict → Explain → Simulate → Learn
+
     </div>
     """,
     unsafe_allow_html=True
