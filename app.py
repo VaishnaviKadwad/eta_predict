@@ -37,28 +37,234 @@ def explain_row(feature_row):
     return readable_names.get(top_feature, top_feature), direction
 
 # ---------- App layout ----------
-st.set_page_config(page_title="Train ETA Predictor", layout="centered")
-st.title("🚆 Dynamic ETA Forecasting")
-
-view_mode = st.sidebar.radio("Dashboard view", ["Passenger", "Control Room / Officer"])
-
-train_options = demo_data["train"].unique()
-selected_train = st.selectbox("Select a train", train_options)
-
-train_rows = demo_data[demo_data["train"] == selected_train].reset_index(drop=True)
-row_index = st.selectbox(
-    "Select journey point",
-    train_rows.index,
-    format_func=lambda i: f'{train_rows.loc[i, "station"]} → {train_rows.loc[i, "next_station"]} ({train_rows.loc[i, "date"]})'
+st.set_page_config(
+    page_title="RailCast | Dynamic ETA Intelligence",
+    page_icon="🚆",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
-current_row = train_rows.loc[row_index].copy()
+    # ---------- RailCast UI Styling ----------
+st.markdown("""
+<style>
+
+    /* Main background */
+    .stApp {
+        background-color: #0b1120;
+    }
+
+    /* Main content width */
+    .block-container {
+        max-width: 1400px;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
+
+    /* Main title */
+    .railcast-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 0;
+        letter-spacing: -1px;
+    }
+
+    .railcast-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.75;
+        margin-top: 0.2rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Section headings */
+    .section-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-top: 1rem;
+        margin-bottom: 0.8rem;
+    }
+
+    /* Cards */
+    .rail-card {
+        background: #111827;
+        border: 1px solid #263244;
+        border-radius: 16px;
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .card-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.65;
+        margin-bottom: 0.3rem;
+    }
+
+    .card-value {
+        font-size: 1.7rem;
+        font-weight: 700;
+    }
+
+    .card-small {
+        font-size: 0.9rem;
+        opacity: 0.7;
+    }
+
+    /* Prediction comparison */
+    .prediction-card {
+        background: #111827;
+        border: 1px solid #263244;
+        border-radius: 18px;
+        padding: 1.4rem;
+        text-align: center;
+        min-height: 150px;
+    }
+
+    .prediction-label {
+        font-size: 0.85rem;
+        opacity: 0.65;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .prediction-value {
+        font-size: 2.4rem;
+        font-weight: 800;
+        margin-top: 0.4rem;
+    }
+
+    .impact-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-top: 0.3rem;
+    }
+
+    /* Scenario result */
+    .scenario-card {
+        background: #1c1917;
+        border: 1px solid #7c5a16;
+        border-radius: 16px;
+        padding: 1.2rem;
+        margin: 1rem 0;
+    }
+
+    /* Info card */
+    .info-card {
+        background: #111827;
+        border: 1px solid #263244;
+        border-radius: 16px;
+        padding: 1.2rem;
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #080d18;
+    }
+
+    /* Buttons */
+    .stButton > button {
+        width: 100%;
+        border-radius: 10px;
+        font-weight: 700;
+        min-height: 45px;
+    }
+
+</style>
+""", unsafe_allow_html=True)
+st.markdown("""
+<div class="railcast-title">🚆 RailCast</div>
+<div class="railcast-subtitle">
+    Dynamic ETA & Delay Intelligence · Predict your arrival. Understand your delay.
+</div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown("## 🚆 RailCast")
+st.sidebar.caption("Dynamic ETA & Delay Intelligence")
+
+st.sidebar.divider()
+
+st.sidebar.markdown("### VIEW")
+
+view_mode = st.sidebar.radio(
+    "Dashboard view",
+    ["Passenger", "Control Room / Officer"],
+    label_visibility="collapsed"
+)
+
+st.sidebar.divider()
+
+st.sidebar.caption(
+    "Predictive railway intelligence for passengers and railway operations."
+)
+
+# ---------- Journey Selection ----------
+st.markdown('<div class="section-title">🚆 Journey Selection</div>', unsafe_allow_html=True)
+
+col1, col2 = st.columns(2)
+
+with col1:
+    train_options = demo_data["train"].unique()
+    selected_train = st.selectbox(
+        "Select train",
+        train_options
+    )
+
+train_rows = demo_data[
+    demo_data["train"] == selected_train
+].reset_index(drop=True)
+
+with col2:
+    row_index = st.selectbox(
+        "Select journey point",
+        train_rows.index,
+        format_func=lambda i:
+            f'{train_rows.loc[i, "station"]} → '
+            f'{train_rows.loc[i, "next_station"]} '
+            f'({train_rows.loc[i, "date"]})'
+    )
+
+# ---------- Journey Summary ----------
+st.markdown('<div class="section-title">📍 Current Journey</div>', unsafe_allow_html=True)
+
+journey_col1, journey_col2, journey_col3 = st.columns(3)
+
+with journey_col1:
+    st.markdown("""
+    <div class="rail-card">
+        <div class="card-label">Train</div>
+        <div class="card-value">🚆 {}</div>
+    </div>
+    """.format(selected_train), unsafe_allow_html=True)
+
+with journey_col2:
+    st.markdown("""
+    <div class="rail-card">
+        <div class="card-label">Journey</div>
+        <div class="card-value">{} → {}</div>
+    </div>
+    """.format(
+        current_row["station"],
+        current_row["next_station"]
+    ), unsafe_allow_html=True)
+
+with journey_col3:
+    st.markdown("""
+    <div class="rail-card">
+        <div class="card-label">Journey Date</div>
+        <div class="card-value">📅 {}</div>
+    </div>
+    """.format(current_row["date"]), unsafe_allow_html=True)
 
 st.divider()
 
 # ---------- Disruption injection (before prediction, so it affects the result) ----------
-st.subheader("⚠️ Simulate a disruption")
+st.markdown("""
+<div class="section-title">⚠️ What-If Disruption Simulator</div>
+<div style="opacity:0.7; margin-bottom:1rem;">
+    See how unexpected operating conditions could change the ETA.
+</div>
+""", unsafe_allow_html=True)
 disruption = st.selectbox(
-    "Inject a live event",
+    ""Select scenario"",
     ["None", "Fog", "Heavy Rain / Storm", "Speed Restriction", "Signal Halt / Unscheduled Stoppage", "Track Congestion Spike", "Unscheduled Maintenance Block"]
 )
 
