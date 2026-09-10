@@ -5,8 +5,9 @@ import joblib
 import plotly.graph_objects as go
 
 from pathlib import Path
-from PIL import Image, ImageOps
+from PIL import Image
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 # ============================================================
@@ -19,6 +20,127 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+
+# ============================================================
+# SECTION COLOURS
+# ============================================================
+
+st.markdown("""
+<style>
+
+/* Main coloured section headers */
+
+.section-blue {
+    background: linear-gradient(90deg, #1565C0, #42A5F5);
+    color: white;
+    padding: 13px 20px;
+    border-radius: 12px;
+    margin: 18px 0 10px 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.section-purple {
+    background: linear-gradient(90deg, #6A1B9A, #AB47BC);
+    color: white;
+    padding: 13px 20px;
+    border-radius: 12px;
+    margin: 18px 0 10px 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.section-sky {
+    background: linear-gradient(90deg, #0277BD, #29B6F6);
+    color: white;
+    padding: 13px 20px;
+    border-radius: 12px;
+    margin: 18px 0 10px 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.section-green {
+    background: linear-gradient(90deg, #2E7D32, #66BB6A);
+    color: white;
+    padding: 13px 20px;
+    border-radius: 12px;
+    margin: 18px 0 10px 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.section-yellow {
+    background: linear-gradient(90deg, #F9A825, #FDD835);
+    color: #3E2723;
+    padding: 13px 20px;
+    border-radius: 12px;
+    margin: 18px 0 10px 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.section-orange {
+    background: linear-gradient(90deg, #EF6C00, #FFA726);
+    color: white;
+    padding: 13px 20px;
+    border-radius: 12px;
+    margin: 18px 0 10px 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.section-red {
+    background: linear-gradient(90deg, #C62828, #EF5350);
+    color: white;
+    padding: 13px 20px;
+    border-radius: 12px;
+    margin: 18px 0 10px 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.section-pink {
+    background: linear-gradient(90deg, #AD1457, #EC407A);
+    color: white;
+    padding: 13px 20px;
+    border-radius: 12px;
+    margin: 18px 0 10px 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.section-teal {
+    background: linear-gradient(90deg, #00695C, #26A69A);
+    color: white;
+    padding: 13px 20px;
+    border-radius: 12px;
+    margin: 18px 0 10px 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.section-maintenance {
+    background: linear-gradient(90deg, #5D4037, #8D6E63);
+    color: white;
+    padding: 13px 20px;
+    border-radius: 12px;
+    margin: 18px 0 10px 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+/* Small subtitle styling */
+
+.section-caption {
+    color: #546E7A;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 
 # ============================================================
@@ -48,13 +170,17 @@ def find_banner():
     ]
 
     for path in paths:
+
         if path.exists() and path.is_file():
             return path
 
     try:
+
         for path in BASE_DIR.rglob("train_banner.png"):
+
             if path.is_file():
                 return path
+
     except Exception:
         pass
 
@@ -78,7 +204,6 @@ if BANNER_FILE is not None:
         if banner.mode not in ("RGB", "RGBA"):
             banner = banner.convert("RGB")
 
-        # Display the actual uploaded image.
         st.image(
             banner,
             width="stretch"
@@ -91,6 +216,7 @@ if BANNER_FILE is not None:
         )
 
         st.title("🚆 RailCast")
+
         st.caption(
             "Dynamic ETA Intelligence for Indian Railways"
         )
@@ -139,16 +265,19 @@ def load_models():
     residual_features = None
 
     if RESIDUAL_MODEL_PATH.exists():
+
         residual_model = joblib.load(
             RESIDUAL_MODEL_PATH
         )
 
     if FEATURE_COLUMNS_PATH.exists():
+
         feature_columns = joblib.load(
             FEATURE_COLUMNS_PATH
         )
 
     if RESIDUAL_FEATURES_PATH.exists():
+
         residual_features = joblib.load(
             RESIDUAL_FEATURES_PATH
         )
@@ -232,10 +361,12 @@ with st.sidebar:
 
 
 # ============================================================
-# DATE / TIME
+# DATE / TIME — INDIA
 # ============================================================
 
-current_time = datetime.now()
+current_time = datetime.now(
+    ZoneInfo("Asia/Kolkata")
+)
 
 date_col, time_col = st.columns([4, 1])
 
@@ -254,16 +385,18 @@ with time_col:
 # SELECT JOURNEY
 # ============================================================
 
-st.title("🚆 Select Journey")
-
-st.caption(
-    "Choose a train and journey point to generate a dynamic ETA forecast."
+st.markdown(
+    '<div class="section-blue">🚆 Select Journey</div>',
+    unsafe_allow_html=True
 )
 
+st.markdown(
+    '<div class="section-caption">'
+    'Choose a train and journey point to generate a dynamic ETA forecast.'
+    '</div>',
+    unsafe_allow_html=True
+)
 
-# ------------------------------------------------------------
-# Train
-# ------------------------------------------------------------
 
 trains = sorted(
     df["train"]
@@ -289,9 +422,9 @@ selected_train = st.selectbox(
 )
 
 
-# ------------------------------------------------------------
-# Train data
-# ------------------------------------------------------------
+# ============================================================
+# TRAIN DATA
+# ============================================================
 
 train_df = df[
     df["train"].astype(str)
@@ -308,9 +441,9 @@ if train_df.empty:
     st.stop()
 
 
-# ------------------------------------------------------------
-# Journey options
-# ------------------------------------------------------------
+# ============================================================
+# JOURNEY OPTIONS
+# ============================================================
 
 train_df["journey_label"] = (
     train_df["station"].astype(str)
@@ -354,12 +487,16 @@ next_station = str(
 # DISRUPTION SIMULATOR
 # ============================================================
 
-st.divider()
+st.markdown(
+    '<div class="section-orange">⚡ What-if Disruption Simulator</div>',
+    unsafe_allow_html=True
+)
 
-st.header("⚡ What-if Disruption Simulator")
-
-st.caption(
-    "Test how an unexpected operating event could change the forecast."
+st.markdown(
+    '<div class="section-caption">'
+    'Test how an unexpected operating event could change the forecast.'
+    '</div>',
+    unsafe_allow_html=True
 )
 
 
@@ -485,6 +622,7 @@ def prepare_features(row, disruption=None):
 
     values = {}
 
+
     for column in columns:
 
         if column in modified.index:
@@ -534,6 +672,10 @@ def predict_delay(row, disruption=None):
     return max(0.0, value), modified
 
 
+# ============================================================
+# NORMAL PREDICTION
+# ============================================================
+
 try:
 
     normal_prediction, normal_row = predict_delay(
@@ -549,11 +691,12 @@ except Exception as e:
     st.stop()
 
 
-# ------------------------------------------------------------
-# Disruption prediction
-# ------------------------------------------------------------
+# ============================================================
+# DISRUPTION PREDICTION
+# ============================================================
 
 disruption_prediction = None
+
 
 if disruption != "None":
 
@@ -656,12 +799,16 @@ risk = delay_risk(
 
 if role == "👤 Passenger":
 
-    st.divider()
+    st.markdown(
+        '<div class="section-teal">🎫 Passenger View</div>',
+        unsafe_allow_html=True
+    )
 
-    st.header("🎫 Passenger View")
-
-    st.caption(
-        "A simple view of where your train is and what to expect next."
+    st.markdown(
+        '<div class="section-caption">'
+        'A simple view of where your train is and what to expect next.'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -669,13 +816,15 @@ if role == "👤 Passenger":
     # CURRENT JOURNEY
     # ========================================================
 
-    st.subheader(
-        "🚆 Current Journey Point"
+    st.markdown(
+        '<div class="section-blue">🚆 Current Journey Point</div>',
+        unsafe_allow_html=True
     )
 
     journey_a, journey_b, journey_c = st.columns(
         [2, 2, 1]
     )
+
 
     with journey_a:
 
@@ -684,12 +833,14 @@ if role == "👤 Passenger":
             station
         )
 
+
     with journey_b:
 
         st.metric(
             "Next Station",
             next_station
         )
+
 
     with journey_c:
 
@@ -708,14 +859,16 @@ if role == "👤 Passenger":
     # FORECAST
     # ========================================================
 
-    st.subheader(
-        "🎯 Dynamic ETA Forecast"
+    st.markdown(
+        '<div class="section-purple">🎯 Dynamic ETA Forecast</div>',
+        unsafe_allow_html=True
     )
 
 
     if disruption == "None":
 
         col1, col2, col3, col4 = st.columns(4)
+
 
         with col1:
 
@@ -724,12 +877,14 @@ if role == "👤 Passenger":
                 f"{current_delay:.1f} min"
             )
 
+
         with col2:
 
             st.metric(
                 "RailCast Forecast",
                 f"{normal_prediction:.1f} min"
             )
+
 
         with col3:
 
@@ -740,6 +895,7 @@ if role == "👤 Passenger":
                 "Estimated Range",
                 f"{low:.0f} → {high:.0f} min"
             )
+
 
         with col4:
 
@@ -753,6 +909,7 @@ if role == "👤 Passenger":
 
         col1, col2, col3, col4 = st.columns(4)
 
+
         with col1:
 
             st.metric(
@@ -760,12 +917,14 @@ if role == "👤 Passenger":
                 f"{current_delay:.1f} min"
             )
 
+
         with col2:
 
             st.metric(
                 "Normal Forecast",
                 f"{normal_prediction:.1f} min"
             )
+
 
         with col3:
 
@@ -779,6 +938,7 @@ if role == "👤 Passenger":
                 f"{disruption_prediction:.1f} min",
                 delta=f"{impact:+.1f} min"
             )
+
 
         with col4:
 
@@ -794,8 +954,9 @@ if role == "👤 Passenger":
     # PASSENGER MESSAGE
     # ========================================================
 
-    st.subheader(
-        "💡 What does this mean?"
+    st.markdown(
+        '<div class="section-yellow">💡 What does this mean?</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -822,9 +983,11 @@ if role == "👤 Passenger":
                 "with connections should allow extra time."
             )
 
+
         st.success(
             message
         )
+
 
     else:
 
@@ -832,6 +995,7 @@ if role == "👤 Passenger":
             disruption_prediction
             - normal_prediction
         )
+
 
         if impact > 0:
 
@@ -853,12 +1017,16 @@ if role == "👤 Passenger":
     # JOURNEY MAP
     # ========================================================
 
-    st.divider()
+    st.markdown(
+        '<div class="section-sky">🗺️ Journey Map</div>',
+        unsafe_allow_html=True
+    )
 
-    st.header("🗺️ Journey Map")
-
-    st.caption(
-        "Current journey point and route progression."
+    st.markdown(
+        '<div class="section-caption">'
+        'Current journey point and route progression.'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -889,11 +1057,13 @@ if role == "👤 Passenger":
             route_row["next_station"]
         )
 
+
         if first_station not in route_stations:
 
             route_stations.append(
                 first_station
             )
+
 
         if second_station not in route_stations:
 
@@ -911,6 +1081,7 @@ if role == "👤 Passenger":
 
 
     current_index = 0
+
 
     if station in route_stations:
 
@@ -1019,10 +1190,9 @@ if role == "👤 Passenger":
     # CONDITIONS
     # ========================================================
 
-    st.divider()
-
-    st.header(
-        "🌦️ Current Operating Conditions"
+    st.markdown(
+        '<div class="section-green">🌦️ Current Operating Conditions</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -1073,11 +1243,13 @@ if role == "👤 Passenger":
     # WHY PREDICTION
     # ========================================================
 
-    st.divider()
-
-    st.header(
-        "🔎 Why is RailCast predicting this?"
+    st.markdown(
+        '<div class="section-yellow">'
+        '🔎 Why is RailCast predicting this?'
+        '</div>',
+        unsafe_allow_html=True
     )
+
 
     st.caption(
         "RailCast combines current delay, historical running "
@@ -1088,14 +1260,24 @@ if role == "👤 Passenger":
     # Determine strongest visible signal
 
     factor_values = {
-        "Current Delay": current_delay,
-        "Rainfall": rainfall,
-        "Low Visibility": max(
-            0,
-            1000 - visibility
-        ),
-        "Congestion": congestion * 100,
-        "Historical Section Time": section_time
+
+        "Current Delay":
+            current_delay,
+
+        "Rainfall":
+            rainfall,
+
+        "Low Visibility":
+            max(
+                0,
+                1000 - visibility
+            ),
+
+        "Congestion":
+            congestion * 100,
+
+        "Historical Section Time":
+            section_time
     }
 
 
@@ -1166,8 +1348,6 @@ if role == "👤 Passenger":
             "quickly the train can cover the next section."
         )
 
-
-    # Main explanation
 
     st.success(
         f"🎯 **RailCast Forecast: "
@@ -1242,10 +1422,9 @@ if role == "👤 Passenger":
 
     if disruption != "None":
 
-        st.divider()
-
-        st.header(
-            "⚡ Disruption Impact"
+        st.markdown(
+            '<div class="section-red">⚡ Disruption Impact</div>',
+            unsafe_allow_html=True
         )
 
 
@@ -1295,10 +1474,9 @@ if role == "👤 Passenger":
     # FEEDBACK
     # ========================================================
 
-    st.divider()
-
-    st.header(
-        "💬 Passenger Feedback"
+    st.markdown(
+        '<div class="section-pink">💬 Passenger Feedback</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -1326,7 +1504,7 @@ if role == "👤 Passenger":
         feedback_data = pd.DataFrame(
             [{
                 "timestamp":
-                    datetime.now().isoformat(),
+                    current_time.isoformat(),
 
                 "train":
                     selected_train,
@@ -1364,9 +1542,11 @@ if role == "👤 Passenger":
                     index=False
                 )
 
+
             st.success(
                 "Thank you — feedback recorded."
             )
+
 
         except Exception:
 
@@ -1381,14 +1561,18 @@ if role == "👤 Passenger":
 
 elif role == "🏢 Station Operator":
 
-    st.divider()
-
-    st.header(
-        "🏢 Station Operator Dashboard"
+    st.markdown(
+        '<div class="section-teal">'
+        '🏢 Station Operator Dashboard'
+        '</div>',
+        unsafe_allow_html=True
     )
 
-    st.caption(
-        "Passenger communication and station readiness."
+    st.markdown(
+        '<div class="section-caption">'
+        'Passenger communication and station readiness.'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -1427,9 +1611,6 @@ elif role == "🏢 Station Operator":
         )
 
 
-    st.divider()
-
-
     if normal_prediction >= 15:
 
         st.error(
@@ -1451,8 +1632,15 @@ elif role == "🏢 Station Operator":
         )
 
 
-    st.subheader(
-        "📢 Suggested Passenger Announcement"
+    # --------------------------------------------------------
+    # ANNOUNCEMENT
+    # --------------------------------------------------------
+
+    st.markdown(
+        '<div class="section-blue">'
+        '📢 Suggested Passenger Announcement'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -1471,8 +1659,15 @@ elif role == "🏢 Station Operator":
     )
 
 
-    st.subheader(
-        "🌦️ Station Conditions"
+    # --------------------------------------------------------
+    # STATION CONDITIONS
+    # --------------------------------------------------------
+
+    st.markdown(
+        '<div class="section-green">'
+        '🌦️ Station Conditions'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -1517,14 +1712,18 @@ elif role == "🏢 Station Operator":
 
 elif role == "🚦 Traffic Controller":
 
-    st.divider()
-
-    st.header(
-        "🚦 Traffic Controller Dashboard"
+    st.markdown(
+        '<div class="section-blue">'
+        '🚦 Traffic Controller Dashboard'
+        '</div>',
+        unsafe_allow_html=True
     )
 
-    st.caption(
-        "Predictive operational intelligence for delay propagation."
+    st.markdown(
+        '<div class="section-caption">'
+        'Predictive operational intelligence for delay propagation.'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -1563,10 +1762,15 @@ elif role == "🚦 Traffic Controller":
         )
 
 
-    st.divider()
+    # --------------------------------------------------------
+    # DELAY EVOLUTION
+    # --------------------------------------------------------
 
-    st.subheader(
-        "📈 Delay Evolution"
+    st.markdown(
+        '<div class="section-purple">'
+        '📈 Delay Evolution'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -1576,6 +1780,7 @@ elif role == "🚦 Traffic Controller":
                 "Current",
                 "RailCast Forecast"
             ],
+
             "Delay": [
                 current_delay,
                 normal_prediction
@@ -1613,8 +1818,15 @@ elif role == "🚦 Traffic Controller":
     )
 
 
-    st.subheader(
-        "⚡ Operational Scenario"
+    # --------------------------------------------------------
+    # OPERATIONAL SCENARIO
+    # --------------------------------------------------------
+
+    st.markdown(
+        '<div class="section-orange">'
+        '⚡ Operational Scenario'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -1668,8 +1880,15 @@ elif role == "🚦 Traffic Controller":
             )
 
 
-    st.subheader(
-        "🧠 Operational Signals"
+    # --------------------------------------------------------
+    # OPERATIONAL SIGNALS
+    # --------------------------------------------------------
+
+    st.markdown(
+        '<div class="section-sky">'
+        '🧠 Operational Signals'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -1727,14 +1946,18 @@ elif role == "🚦 Traffic Controller":
 
 else:
 
-    st.divider()
-
-    st.header(
-        "🛠️ Maintenance Operator Dashboard"
+    st.markdown(
+        '<div class="section-maintenance">'
+        '🛠️ Maintenance Operator Dashboard'
+        '</div>',
+        unsafe_allow_html=True
     )
 
-    st.caption(
-        "Infrastructure and environmental conditions affecting train movement."
+    st.markdown(
+        '<div class="section-caption">'
+        'Infrastructure and environmental conditions affecting train movement.'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -1773,10 +1996,15 @@ else:
         )
 
 
-    st.divider()
+    # --------------------------------------------------------
+    # INFRASTRUCTURE SCENARIO
+    # --------------------------------------------------------
 
-    st.subheader(
-        "🛤️ Infrastructure Scenario"
+    st.markdown(
+        '<div class="section-orange">'
+        '🛤️ Infrastructure Scenario'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
@@ -1844,8 +2072,15 @@ else:
             )
 
 
-    st.subheader(
-        "🌦️ Environmental Conditions"
+    # --------------------------------------------------------
+    # ENVIRONMENTAL CONDITIONS
+    # --------------------------------------------------------
+
+    st.markdown(
+        '<div class="section-green">'
+        '🌦️ Environmental Conditions'
+        '</div>',
+        unsafe_allow_html=True
     )
 
 
