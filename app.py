@@ -8,6 +8,12 @@ import joblib
 import xgboost as xgb
 import plotly.graph_objects as go
 
+# ============================================================
+# BASE DIRECTORY
+# ============================================================
+
+BASE_DIR = Path(__file__).resolve().parent
+
 
 # ============================================================
 # PAGE CONFIG
