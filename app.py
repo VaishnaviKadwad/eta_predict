@@ -1,5 +1,4 @@
 import os
-import textwrap
 import streamlit as st
 import pandas as pd
 import joblib
@@ -21,6 +20,18 @@ XGB_MAE = 7.88
 
 
 # ============================================================
+# PAGE CONFIG
+# ============================================================
+
+st.set_page_config(
+    page_title="RailCast | Dynamic ETA Intelligence",
+    page_icon="🚆",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+
+# ============================================================
 # FEATURE NAMES
 # ============================================================
 
@@ -35,24 +46,6 @@ readable_names = {
     "hour": "time of day",
     "day_of_week": "day of week",
 }
-
-
-# ============================================================
-# HTML RENDER HELPER
-# ============================================================
-
-def render_html(html):
-    """
-    Removes accidental indentation from HTML before
-    sending it to Streamlit.
-
-    This prevents Streamlit from displaying HTML as
-    a code block.
-    """
-    st.markdown(
-        textwrap.dedent(html),
-        unsafe_allow_html=True
-    )
 
 
 # ============================================================
@@ -102,417 +95,84 @@ def explain_row(feature_row):
 
 
 # ============================================================
-# PAGE CONFIG
-# ============================================================
-
-st.set_page_config(
-    page_title="RailCast | Dynamic ETA Intelligence",
-    page_icon="🚆",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-
-# ============================================================
 # CUSTOM CSS
+#
+# ONLY styling here.
+# NO HTML CARDS ARE USED ANYWHERE ELSE.
 # ============================================================
 
 st.markdown(
     """
-<style>
-
-/* ============================================================
-   GLOBAL
-   ============================================================ */
-
-.stApp {
-    background-color: #0b1118;
-}
-
-.block-container {
-    max-width: 1380px;
-    padding-top: 1.7rem;
-    padding-bottom: 3rem;
-}
-
-div[data-testid="stVerticalBlock"] {
-    gap: 0.55rem;
-}
-
-
-/* ============================================================
-   HEADER
-   ============================================================ */
-
-.brand-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 3px;
-}
-
-.brand-mark {
-    width: 46px;
-    height: 46px;
-    border-radius: 10px;
-    background-color: #c62828;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-}
-
-.brand-name {
-    font-size: 2.45rem;
-    font-weight: 800;
-    letter-spacing: -1.2px;
-    color: #f4f7fa;
-    line-height: 1;
-}
-
-.brand-subtitle {
-    color: #8d99a6;
-    font-size: 0.97rem;
-    margin-left: 60px;
-    margin-bottom: 26px;
-}
-
-
-/* ============================================================
-   SECTION HEADINGS
-   ============================================================ */
-
-.section-heading {
-    font-size: 1.15rem;
-    font-weight: 750;
-    color: #e8edf1;
-    margin-top: 12px;
-    margin-bottom: 5px;
-}
-
-.section-description {
-    color: #8996a3;
-    font-size: 0.86rem;
-    margin-bottom: 13px;
-}
-
-
-/* ============================================================
-   JOURNEY CARDS
-   ============================================================ */
-
-.journey-panel {
-    background-color: #111923;
-    border: 1px solid #26313c;
-    border-radius: 11px;
-    padding: 17px 19px;
-    margin-top: 4px;
-    margin-bottom: 7px;
-    min-height: 78px;
-}
-
-.journey-label {
-    color: #778592;
-    font-size: 0.68rem;
-    font-weight: 750;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 7px;
-}
-
-.journey-value {
-    color: #f1f5f8;
-    font-size: 1.13rem;
-    font-weight: 700;
-}
-
-.journey-route {
-    color: #f1f5f8;
-    font-size: 1.27rem;
-    font-weight: 800;
-}
-
-.journey-arrow {
-    color: #d33a3a;
-    padding: 0 7px;
-}
-
-
-/* ============================================================
-   ROUTE PANEL
-   ============================================================ */
-
-.route-panel {
-    background-color: #101820;
-    border: 1px solid #26323d;
-    border-radius: 11px;
-    padding: 17px 20px;
-    margin-top: 7px;
-    margin-bottom: 18px;
-}
-
-.route-heading {
-    color: #9aa6b1;
-    font-size: 0.72rem;
-    font-weight: 750;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-}
-
-.route-current {
-    color: #8f9ba6;
-    font-size: 0.82rem;
-    margin-top: 2px;
-}
-
-
-/* ============================================================
-   PREDICTION CARDS
-   ============================================================ */
-
-.prediction-card {
-    background-color: #111923;
-    border: 1px solid #293540;
-    border-radius: 12px;
-    padding: 19px 20px;
-    min-height: 145px;
-}
-
-.prediction-card.primary {
-    border-left: 4px solid #c62828;
-}
-
-.prediction-label {
-    color: #84919d;
-    font-size: 0.69rem;
-    font-weight: 750;
-    letter-spacing: 0.9px;
-    text-transform: uppercase;
-}
-
-.prediction-number {
-    color: #f5f7f9;
-    font-size: 2.3rem;
-    font-weight: 850;
-    line-height: 1.15;
-    margin-top: 9px;
-}
-
-.prediction-unit {
-    color: #8995a0;
-    font-size: 0.84rem;
-}
-
-.prediction-delta {
-    color: #e0b447;
-    font-size: 0.84rem;
-    font-weight: 750;
-    margin-top: 8px;
-}
-
-.prediction-note {
-    color: #76838f;
-    font-size: 0.73rem;
-    margin-top: 6px;
-}
-
-
-/* ============================================================
-   SCENARIO
-   ============================================================ */
-
-.scenario-panel {
-    background-color: #191814;
-    border: 1px solid #554a24;
-    border-radius: 11px;
-    padding: 14px 17px;
-    margin: 8px 0 14px 0;
-}
-
-.scenario-title {
-    color: #e2bd54;
-    font-size: 0.9rem;
-    font-weight: 750;
-}
-
-.scenario-text {
-    color: #aaa38e;
-    font-size: 0.82rem;
-    margin-top: 4px;
-    line-height: 1.45;
-}
-
-
-/* ============================================================
-   IMPACT
-   ============================================================ */
-
-.impact-panel {
-    background-color: #111923;
-    border: 1px solid #293540;
-    border-radius: 11px;
-    padding: 16px 19px;
-    margin-top: 8px;
-    margin-bottom: 15px;
-}
-
-.impact-title {
-    color: #e8edf1;
-    font-size: 0.9rem;
-    font-weight: 750;
-    margin-bottom: 9px;
-}
-
-.impact-row {
-    display: flex;
-    justify-content: space-between;
-    color: #8995a0;
-    font-size: 0.78rem;
-}
-
-.impact-number {
-    color: #e8edf1;
-    font-weight: 750;
-}
-
-
-/* ============================================================
-   OPERATING CONDITIONS
-   ============================================================ */
-
-.condition-card {
-    background-color: #111923;
-    border: 1px solid #293540;
-    border-radius: 10px;
-    padding: 13px 14px;
-    min-height: 77px;
-}
-
-.condition-label {
-    color: #788590;
-    font-size: 0.67rem;
-    font-weight: 750;
-    letter-spacing: 0.7px;
-    text-transform: uppercase;
-}
-
-.condition-value {
-    color: #edf1f4;
-    font-size: 0.94rem;
-    font-weight: 700;
-    margin-top: 5px;
-    line-height: 1.25;
-}
-
-
-/* ============================================================
-   EXPLANATION
-   ============================================================ */
-
-.explanation-panel {
-    background-color: #101820;
-    border: 1px solid #28343e;
-    border-radius: 11px;
-    padding: 17px 19px;
-    margin-top: 10px;
-    margin-bottom: 16px;
-}
-
-.explanation-title {
-    color: #e8edf1;
-    font-weight: 750;
-    font-size: 0.93rem;
-    margin-bottom: 7px;
-}
-
-.explanation-text {
-    color: #a9b3bc;
-    font-size: 0.86rem;
-    line-height: 1.55;
-}
-
-.explanation-highlight {
-    color: #f1f4f6;
-    font-weight: 700;
-}
-
-
-/* ============================================================
-   SIDEBAR
-   ============================================================ */
-
-section[data-testid="stSidebar"] {
-    background-color: #080d13;
-    border-right: 1px solid #1e2933;
-}
-
-.sidebar-brand {
-    color: #f0f3f5;
-    font-size: 1.35rem;
-    font-weight: 800;
-}
-
-.sidebar-caption {
-    color: #77838e;
-    font-size: 0.79rem;
-}
-
-.sidebar-status {
-    border: 1px solid #27323b;
-    background-color: #10171e;
-    border-radius: 9px;
-    padding: 12px;
-    margin-top: 12px;
-}
-
-.status-online {
-    color: #62ae72;
-    font-size: 0.76rem;
-    font-weight: 750;
-}
-
-.status-detail {
-    color: #788590;
-    font-size: 0.72rem;
-    margin-top: 3px;
-}
-
-
-/* ============================================================
-   STREAMLIT CONTROLS
-   ============================================================ */
-
-div[data-baseweb="select"] > div {
-    background-color: #111923;
-    border-color: #303c47;
-}
-
-.stButton > button {
-    width: 100%;
-    border-radius: 8px;
-    min-height: 42px;
-    font-weight: 700;
-}
-
-.stMetric {
-    background-color: #111923;
-    border: 1px solid #293540;
-    border-radius: 10px;
-    padding: 10px;
-}
-
-
-/* ============================================================
-   FOOTER
-   ============================================================ */
-
-footer {
-    visibility: hidden;
-}
-
-</style>
-""",
+    <style>
+
+    /* Overall background */
+    .stApp {
+        background-color: #0b1118;
+    }
+
+    /* Main content */
+    .block-container {
+        max-width: 1350px;
+        padding-top: 1.5rem;
+        padding-bottom: 3rem;
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #080d13;
+        border-right: 1px solid #202a34;
+    }
+
+    /* Sidebar text */
+    section[data-testid="stSidebar"] * {
+        font-size: 0.92rem;
+    }
+
+    /* Main headings */
+    h1, h2, h3 {
+        letter-spacing: -0.3px;
+    }
+
+    /* Metric cards */
+    div[data-testid="stMetric"] {
+        background-color: #111923;
+        border: 1px solid #293540;
+        border-radius: 10px;
+        padding: 15px;
+    }
+
+    /* Buttons */
+    .stButton > button {
+        border-radius: 8px;
+        min-height: 42px;
+        font-weight: 700;
+    }
+
+    /* Select boxes */
+    div[data-baseweb="select"] > div {
+        background-color: #111923;
+        border-color: #303c47;
+    }
+
+    /* Containers */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #101820;
+        border-color: #293540;
+        border-radius: 10px;
+    }
+
+    /* Progress bar */
+    div[data-testid="stProgress"] > div > div {
+        border-radius: 10px;
+    }
+
+    /* Hide footer */
+    footer {
+        visibility: hidden;
+    }
+
+    </style>
+    """,
     unsafe_allow_html=True
 )
 
@@ -521,45 +181,35 @@ footer {
 # SIDEBAR
 # ============================================================
 
-render_html(
-    """
-    <div class="sidebar-brand">🚆 RailCast</div>
+st.sidebar.title("🚆 RailCast")
 
-    <div class="sidebar-caption">
-        Dynamic ETA & Delay Intelligence
-    </div>
-
-    <div class="sidebar-status">
-        <div class="status-online">
-            ● MODEL ONLINE
-        </div>
-
-        <div class="status-detail">
-            XGBoost prediction engine
-        </div>
-    </div>
-    """
+st.sidebar.caption(
+    "Dynamic ETA & Delay Intelligence"
 )
 
 st.sidebar.divider()
 
-st.sidebar.markdown("### Dashboard")
+st.sidebar.subheader("Dashboard")
 
 view_mode = st.sidebar.radio(
-    "Dashboard view",
+    "Choose dashboard",
     [
         "Passenger",
         "Control Room / Officer"
-    ],
-    label_visibility="collapsed"
+    ]
 )
 
 st.sidebar.divider()
 
-st.sidebar.markdown("### Model reference")
+st.sidebar.subheader("Model")
+
+st.sidebar.metric(
+    "Validation MAE",
+    f"{XGB_MAE:.2f} min"
+)
 
 st.sidebar.caption(
-    f"Validation MAE: {XGB_MAE:.2f} minutes"
+    "XGBoost prediction engine"
 )
 
 st.sidebar.caption(
@@ -568,35 +218,21 @@ st.sidebar.caption(
 
 st.sidebar.divider()
 
-st.sidebar.caption(
-    "Decision-support prototype. Operational actions "
-    "remain with authorised railway staff."
+st.sidebar.info(
+    "Decision-support prototype. "
+    "Operational actions remain with authorised railway staff."
 )
 
 
 # ============================================================
-# HEADER
+# MAIN HEADER
 # ============================================================
 
-render_html(
-    """
-    <div class="brand-row">
+st.title("🚆 RailCast")
 
-        <div class="brand-mark">
-            🚆
-        </div>
-
-        <div class="brand-name">
-            RailCast
-        </div>
-
-    </div>
-
-    <div class="brand-subtitle">
-        Dynamic ETA & Delay Intelligence
-        · Predict the arrival. Understand the delay.
-    </div>
-    """
+st.caption(
+    "Dynamic ETA & Delay Intelligence  •  "
+    "Predict the arrival. Understand the delay."
 )
 
 
@@ -604,24 +240,18 @@ render_html(
 # JOURNEY SELECTION
 # ============================================================
 
-render_html(
-    """
-    <div class="section-heading">
-        Journey
-    </div>
+st.header("Journey")
 
-    <div class="section-description">
-        Choose a train and the section of its journey to analyse.
-    </div>
-    """
+st.caption(
+    "Select a train and a point along its journey."
 )
 
-select_col1, select_col2 = st.columns(
-    [1, 1.7]
+select1, select2 = st.columns(
+    [1, 2]
 )
 
 
-with select_col1:
+with select1:
 
     train_options = (
         demo_data["train"]
@@ -635,9 +265,7 @@ with select_col1:
     )
 
 
-# ============================================================
-# FILTER DATA
-# ============================================================
+# Filter train
 
 train_rows = (
     demo_data[
@@ -647,7 +275,7 @@ train_rows = (
 )
 
 
-with select_col2:
+with select2:
 
     row_index = st.selectbox(
         "Journey point",
@@ -663,7 +291,7 @@ with select_col2:
 
 
 # ============================================================
-# CREATE CURRENT ROW
+# CURRENT ROW
 # ============================================================
 
 current_row = (
@@ -674,78 +302,36 @@ current_row = (
 
 
 # ============================================================
-# CURRENT JOURNEY
+# CURRENT JOURNEY SUMMARY
 # ============================================================
 
-render_html(
-    """
-    <div class="section-heading">
-        Current journey
-    </div>
-    """
-)
+st.subheader("Current journey")
 
-j1, j2, j3 = st.columns(
-    [0.9, 1.5, 0.9]
-)
+j1, j2, j3 = st.columns(3)
 
 
 with j1:
 
-    render_html(
-        f"""
-        <div class="journey-panel">
-
-            <div class="journey-label">
-                Train
-            </div>
-
-            <div class="journey-value">
-                🚆 {selected_train}
-            </div>
-
-        </div>
-        """
+    st.metric(
+        "Train",
+        f"🚆 {selected_train}"
     )
 
 
 with j2:
 
-    render_html(
-        f"""
-        <div class="journey-panel">
-
-            <div class="journey-label">
-                Current section
-            </div>
-
-            <div class="journey-route">
-                {current_row["station"]}
-                <span class="journey-arrow">→</span>
-                {current_row["next_station"]}
-            </div>
-
-        </div>
-        """
+    st.metric(
+        "Current section",
+        f'{current_row["station"]} → '
+        f'{current_row["next_station"]}'
     )
 
 
 with j3:
 
-    render_html(
-        f"""
-        <div class="journey-panel">
-
-            <div class="journey-label">
-                Journey date
-            </div>
-
-            <div class="journey-value">
-                📅 {current_row["date"]}
-            </div>
-
-        </div>
-        """
+    st.metric(
+        "Journey date",
+        str(current_row["date"])
     )
 
 
@@ -753,18 +339,7 @@ with j3:
 # ROUTE PROGRESS
 # ============================================================
 
-render_html(
-    """
-    <div class="route-panel">
-
-        <div class="route-heading">
-            Route progress
-        </div>
-
-    </div>
-    """
-)
-
+st.subheader("Route progress")
 
 try:
 
@@ -782,30 +357,29 @@ try:
 
     if (
         pd.notna(min_sequence)
-        and
-        pd.notna(max_sequence)
-        and
-        max_sequence > min_sequence
+        and pd.notna(max_sequence)
+        and max_sequence > min_sequence
     ):
 
         progress = (
-            (current_position - min_sequence)
-            /
-            (max_sequence - min_sequence)
+            current_position - min_sequence
+        ) / (
+            max_sequence - min_sequence
         )
 
     else:
 
         progress = 0.5
 
-    progress = max(
-        0.0,
-        min(1.0, progress)
-    )
-
 except Exception:
 
     progress = 0.5
+
+
+progress = max(
+    0.0,
+    min(1.0, progress)
+)
 
 
 route_stations = (
@@ -832,61 +406,35 @@ else:
     )
 
 
-route_left, route_middle, route_right = st.columns(
-    [1, 5, 1]
+r1, r2, r3 = st.columns(
+    [1, 6, 1]
 )
 
 
-with route_left:
+with r1:
 
-    render_html(
-        f"""
-        <div style="
-            color:#e8edf1;
-            font-size:0.86rem;
-            font-weight:700;
-            padding-top:7px;
-        ">
-            ● {first_station}
-        </div>
-        """
+    st.write(
+        f"**● {first_station}**"
     )
 
 
-with route_middle:
+with r2:
 
-    st.progress(progress)
-
-    progress_percent = int(
-        progress * 100
+    st.progress(
+        progress
     )
 
-    render_html(
-        f"""
-        <div class="route-current">
-            <b>{current_row["station"]}</b>
-            → {current_row["next_station"]}
-            &nbsp;&nbsp;·&nbsp;&nbsp;
-            {progress_percent}% along selected route
-        </div>
-        """
+    st.caption(
+        f"Current: **{current_row['station']} → "
+        f"{current_row['next_station']}**  "
+        f"•  {progress * 100:.0f}% along selected route"
     )
 
 
-with route_right:
+with r3:
 
-    render_html(
-        f"""
-        <div style="
-            color:#e8edf1;
-            font-size:0.86rem;
-            font-weight:700;
-            text-align:right;
-            padding-top:7px;
-        ">
-            {last_station} ●
-        </div>
-        """
+    st.write(
+        f"**{last_station} ●**"
     )
 
 
@@ -894,20 +442,17 @@ with route_right:
 # WHAT-IF ANALYSIS
 # ============================================================
 
-render_html(
-    """
-    <div class="section-heading">
-        What-if analysis
-    </div>
+st.divider()
 
-    <div class="section-description">
-        Inject an operating disruption and see how the forecast changes.
-    </div>
-    """
+st.header("What-if analysis")
+
+st.caption(
+    "Introduce a disruption and see how the predicted delay changes."
 )
 
+
 disruption = st.selectbox(
-    "Select operating scenario",
+    "Operating scenario",
     [
         "None",
         "Fog",
@@ -921,7 +466,7 @@ disruption = st.selectbox(
 
 
 # ============================================================
-# SIMULATION
+# SIMULATED ROW
 # ============================================================
 
 sim_row = current_row.copy()
@@ -974,7 +519,9 @@ elif disruption == "Speed Restriction":
         "by 50% because of a temporary speed restriction."
     )
 
-    sim_weather_label = "Speed Restriction in effect"
+    sim_weather_label = (
+        "Speed Restriction in effect"
+    )
 
 
 elif disruption == "Signal Halt / Unscheduled Stoppage":
@@ -988,7 +535,9 @@ elif disruption == "Signal Halt / Unscheduled Stoppage":
         "was introduced."
     )
 
-    sim_weather_label = "Signal Halt in effect"
+    sim_weather_label = (
+        "Signal Halt in effect"
+    )
 
 
 elif disruption == "Track Congestion Spike":
@@ -1000,7 +549,9 @@ elif disruption == "Track Congestion Spike":
         "to a near-maximum level."
     )
 
-    sim_weather_label = "Track Congestion Spike"
+    sim_weather_label = (
+        "Track Congestion Spike"
+    )
 
 
 elif disruption == "Unscheduled Maintenance Block":
@@ -1014,7 +565,9 @@ elif disruption == "Unscheduled Maintenance Block":
         "adding 45 minutes was introduced."
     )
 
-    sim_weather_label = "Maintenance Block in effect"
+    sim_weather_label = (
+        "Maintenance Block in effect"
+    )
 
 
 # ============================================================
@@ -1032,7 +585,7 @@ X_original = (
     .apply(pd.to_numeric)
 )
 
-original_predicted_delay = (
+original_predicted_delay = float(
     xgb_model.predict(
         X_original
     )[0]
@@ -1050,7 +603,7 @@ X_input = (
     .apply(pd.to_numeric)
 )
 
-predicted_delay = (
+predicted_delay = float(
     xgb_model.predict(
         X_input
     )[0]
@@ -1070,20 +623,9 @@ delay_change = (
 
 if disruption != "None":
 
-    render_html(
-        f"""
-        <div class="scenario-panel">
-
-            <div class="scenario-title">
-                ⚠ {disruption}
-            </div>
-
-            <div class="scenario-text">
-                {disruption_note}
-            </div>
-
-        </div>
-        """
+    st.warning(
+        f"**{disruption}**  \n"
+        f"{disruption_note}"
     )
 
 
@@ -1091,105 +633,45 @@ if disruption != "None":
 # ETA FORECAST
 # ============================================================
 
-render_html(
-    """
-    <div class="section-heading">
-        ETA forecast
-    </div>
-    """
-)
+st.header("ETA forecast")
 
 
-p1, p2, p3 = st.columns(
-    [1, 1, 0.9]
-)
+p1, p2, p3 = st.columns(3)
 
-
-# ============================================================
-# CURRENT FORECAST
-# ============================================================
 
 with p1:
 
-    render_html(
-        f"""
-        <div class="prediction-card">
-
-            <div class="prediction-label">
-                Current conditions
-            </div>
-
-            <div class="prediction-number">
-                {original_predicted_delay:.1f}
-            </div>
-
-            <div class="prediction-unit">
-                minutes predicted delay
-            </div>
-
-        </div>
-        """
+    st.metric(
+        "Normal conditions",
+        f"{original_predicted_delay:.1f} min"
     )
 
+    st.caption(
+        "Predicted delay"
+    )
 
-# ============================================================
-# SCENARIO FORECAST
-# ============================================================
 
 with p2:
 
     if disruption != "None":
 
-        render_html(
-            f"""
-            <div class="prediction-card primary">
-
-                <div class="prediction-label">
-                    With selected disruption
-                </div>
-
-                <div class="prediction-number">
-                    {predicted_delay:.1f}
-                </div>
-
-                <div class="prediction-unit">
-                    minutes predicted delay
-                </div>
-
-                <div class="prediction-delta">
-                    {delay_change:+.1f} min impact
-                </div>
-
-            </div>
-            """
+        st.metric(
+            "With disruption",
+            f"{predicted_delay:.1f} min",
+            delta=f"{delay_change:+.1f} min"
         )
 
     else:
 
-        render_html(
-            f"""
-            <div class="prediction-card primary">
-
-                <div class="prediction-label">
-                    Current prediction
-                </div>
-
-                <div class="prediction-number">
-                    {predicted_delay:.1f}
-                </div>
-
-                <div class="prediction-unit">
-                    minutes predicted delay
-                </div>
-
-            </div>
-            """
+        st.metric(
+            "Current prediction",
+            f"{predicted_delay:.1f} min"
         )
 
+    st.caption(
+        "Predicted delay"
+    )
 
-# ============================================================
-# ESTIMATED RANGE
-# ============================================================
 
 with p3:
 
@@ -1201,151 +683,82 @@ with p3:
         predicted_delay + XGB_MAE
     )
 
-    render_html(
-        f"""
-        <div class="prediction-card">
+    st.metric(
+        "Estimated range",
+        f"{lower_range:.0f}–{upper_range:.0f} min"
+    )
 
-            <div class="prediction-label">
-                Estimated range
-            </div>
-
-            <div
-                class="prediction-number"
-                style="font-size:1.8rem;"
-            >
-                {lower_range:.0f}–{upper_range:.0f}
-            </div>
-
-            <div class="prediction-unit">
-                minutes
-            </div>
-
-            <div class="prediction-note">
-                Based on validation MAE
-                ±{XGB_MAE:.2f} min
-            </div>
-
-        </div>
-        """
+    st.caption(
+        f"Based on validation MAE ±{XGB_MAE:.2f} min"
     )
 
 
 # ============================================================
-# DISRUPTION IMPACT
+# DELAY IMPACT GRAPH
 # ============================================================
 
 if disruption != "None":
 
-    denominator = max(
-        abs(original_predicted_delay) + 20,
-        20
+    st.subheader("Delay impact")
+
+    chart_data = pd.DataFrame(
+        {
+            "Forecast": [
+                original_predicted_delay,
+                predicted_delay
+            ]
+        },
+        index=[
+            "Normal",
+            "Scenario"
+        ]
     )
 
-    impact_ratio = (
-        abs(delay_change)
-        /
-        denominator
+    st.bar_chart(
+        chart_data,
+        height=230
     )
 
-    impact_ratio = min(
-        impact_ratio,
-        1.0
-    )
+    if delay_change > 0:
 
-    render_html(
-        f"""
-        <div class="impact-panel">
+        st.error(
+            f"The selected disruption increases the "
+            f"forecast by **{delay_change:.1f} minutes**."
+        )
 
-            <div class="impact-title">
-                Disruption impact
-            </div>
+    elif delay_change < 0:
 
-            <div class="impact-row">
+        st.success(
+            f"The selected scenario reduces the "
+            f"forecast by **{abs(delay_change):.1f} minutes**."
+        )
 
-                <span>
-                    Normal forecast
-                </span>
+    else:
 
-                <span class="impact-number">
-                    {original_predicted_delay:.1f} min
-                </span>
-
-            </div>
-
-            <div style="
-                margin:10px 0;
-                background:#27323c;
-                height:9px;
-                border-radius:8px;
-                overflow:hidden;
-            ">
-
-                <div style="
-                    width:{impact_ratio * 100:.1f}%;
-                    height:100%;
-                    background:#c62828;
-                    border-radius:8px;
-                ">
-                </div>
-
-            </div>
-
-            <div class="impact-row">
-
-                <span>
-                    Scenario forecast
-                </span>
-
-                <span class="impact-number">
-                    {predicted_delay:.1f} min
-                </span>
-
-            </div>
-
-        </div>
-        """
-    )
+        st.info(
+            "The selected scenario does not change "
+            "the model's forecast for this journey point."
+        )
 
 
 # ============================================================
 # OPERATING CONDITIONS
 # ============================================================
 
-render_html(
-    """
-    <div class="section-heading">
-        Operating conditions
-    </div>
-    """
-)
+st.subheader("Operating conditions")
 
-condition1, condition2, condition3, condition4 = st.columns(4)
+c1, c2, c3, c4 = st.columns(4)
 
 
-# WEATHER
+with c1:
 
-with condition1:
-
-    render_html(
-        f"""
-        <div class="condition-card">
-
-            <div class="condition-label">
-                Weather
-            </div>
-
-            <div class="condition-value">
-                {sim_weather_label}
-            </div>
-
-        </div>
-        """
+    st.metric(
+        "Weather",
+        str(sim_weather_label)
     )
 
 
-# VISIBILITY
-
-with condition2:
+with c2:
 
     visibility = sim_row.get(
         "visibility_m",
@@ -1354,34 +767,20 @@ with condition2:
 
     if pd.notna(visibility):
 
-        visibility_text = (
+        st.metric(
+            "Visibility",
             f"{float(visibility):.0f} m"
         )
 
     else:
 
-        visibility_text = "—"
-
-    render_html(
-        f"""
-        <div class="condition-card">
-
-            <div class="condition-label">
-                Visibility
-            </div>
-
-            <div class="condition-value">
-                {visibility_text}
-            </div>
-
-        </div>
-        """
-    )
+        st.metric(
+            "Visibility",
+            "—"
+        )
 
 
-# CONGESTION
-
-with condition3:
+with c3:
 
     congestion = sim_row.get(
         "congestion_score",
@@ -1390,34 +789,20 @@ with condition3:
 
     if pd.notna(congestion):
 
-        congestion_text = (
+        st.metric(
+            "Congestion",
             f"{float(congestion):.2f}"
         )
 
     else:
 
-        congestion_text = "—"
-
-    render_html(
-        f"""
-        <div class="condition-card">
-
-            <div class="condition-label">
-                Congestion
-            </div>
-
-            <div class="condition-value">
-                {congestion_text}
-            </div>
-
-        </div>
-        """
-    )
+        st.metric(
+            "Congestion",
+            "—"
+        )
 
 
-# SECTION TIME
-
-with condition4:
+with c4:
 
     section_time = sim_row.get(
         "historical_section_time",
@@ -1426,28 +811,51 @@ with condition4:
 
     if pd.notna(section_time):
 
-        section_text = (
+        st.metric(
+            "Section time",
             f"{float(section_time):.1f} min"
         )
 
     else:
 
-        section_text = "—"
+        st.metric(
+            "Section time",
+            "—"
+        )
 
-    render_html(
-        f"""
-        <div class="condition-card">
 
-            <div class="condition-label">
-                Section time
-            </div>
+# ============================================================
+# RISK INDICATOR
+# ============================================================
 
-            <div class="condition-value">
-                {section_text}
-            </div>
+st.subheader("Delay risk")
 
-        </div>
-        """
+
+if predicted_delay < 5:
+
+    risk_level = "LOW"
+
+    st.success(
+        f"🟢 **{risk_level} RISK** — "
+        "The current forecast indicates a relatively small delay."
+    )
+
+elif predicted_delay < 15:
+
+    risk_level = "MODERATE"
+
+    st.warning(
+        f"🟡 **{risk_level} RISK** — "
+        "The forecast indicates a noticeable delay."
+    )
+
+else:
+
+    risk_level = "HIGH"
+
+    st.error(
+        f"🔴 **{risk_level} RISK** — "
+        "The forecast indicates a significant delay."
     )
 
 
@@ -1460,110 +868,80 @@ top_feature, direction = explain_row(
 )
 
 
+st.subheader("Why this prediction?")
+
+
 if view_mode == "Passenger":
 
-    render_html(
-        f"""
-        <div class="explanation-panel">
+    with st.container(border=True):
 
-            <div class="explanation-title">
-                ℹ Why this prediction?
-            </div>
+        st.write(
+            f"The forecast is mainly influenced by "
+            f"**{top_feature}**, which is currently "
+            f"**{direction}**."
+        )
 
-            <div class="explanation-text">
-
-                The forecast is mainly influenced by
-                <span class="explanation-highlight">
-                    {top_feature}
-                </span>,
-                which is currently
-                <span class="explanation-highlight">
-                    {direction}
-                </span>.
-
-                <br><br>
-
-                Current operating condition:
-                <span class="explanation-highlight">
-                    {sim_weather_label}
-                </span>.
-
-            </div>
-
-        </div>
-        """
-    )
+        st.caption(
+            f"Current operating condition: {sim_weather_label}"
+        )
 
 
 else:
 
-    render_html(
-        f"""
-        <div class="explanation-panel">
+    with st.container(border=True):
 
-            <div class="explanation-title">
-                🔧 Control-room analysis
-            </div>
+        st.write(
+            f"### 🔧 Control-room analysis"
+        )
 
-            <div class="explanation-text">
+        st.write(
+            f"Primary contributing feature: "
+            f"**{top_feature}** "
+            f"({direction})."
+        )
 
-                Primary contributing feature:
-                <span class="explanation-highlight">
-                    {top_feature}
-                </span>
-                ({direction}).
+        officer1, officer2, officer3 = st.columns(3)
 
-                <br><br>
+        with officer1:
 
-                Weather:
-                <span class="explanation-highlight">
-                    {sim_weather_label}
-                </span>
+            st.metric(
+                "Congestion score",
+                f'{float(sim_row["congestion_score"]):.2f}'
+            )
 
-                <br><br>
+        with officer2:
 
-                Congestion score:
-                <span class="explanation-highlight">
-                    {sim_row["congestion_score"]:.2f}
-                </span>
+            st.metric(
+                "Historical section time",
+                f'{float(sim_row["historical_section_time"]):.1f} min'
+            )
 
-                &nbsp;&nbsp; | &nbsp;&nbsp;
+        with officer3:
 
-                Historical section time:
-                <span class="explanation-highlight">
-                    {sim_row["historical_section_time"]:.1f} min
-                </span>
+            st.metric(
+                "Route position",
+                str(sim_row["station_sequence"])
+            )
 
-                &nbsp;&nbsp; | &nbsp;&nbsp;
-
-                Route position:
-                <span class="explanation-highlight">
-                    {sim_row["station_sequence"]}
-                </span>
-
-            </div>
-
-        </div>
-        """
-    )
+        st.caption(
+            f"Operating condition: {sim_weather_label}"
+        )
 
 
 # ============================================================
 # PASSENGER FEEDBACK
 # ============================================================
 
-render_html(
-    """
-    <div class="section-heading">
-        Close the prediction loop
-    </div>
+st.divider()
 
-    <div class="section-description">
-        Record the actual delay experienced. This creates a feedback
-        dataset for future evaluation and model improvement.
-    </div>
-    """
+st.header("Prediction feedback")
+
+st.caption(
+    "Record the actual delay experienced. "
+    "This creates a feedback dataset for future evaluation "
+    "and model improvement."
 )
+
 
 feedback_col1, feedback_col2 = st.columns(
     [1, 2]
@@ -1621,19 +999,7 @@ with feedback_col2:
 
 st.divider()
 
-render_html(
-    """
-    <div style="
-        text-align:center;
-        color:#64717d;
-        font-size:0.75rem;
-        padding:7px 0 15px 0;
-    ">
-
-        RailCast · Dynamic ETA Forecasting Prototype
-        &nbsp; • &nbsp;
-        Predict → Explain → Simulate → Learn
-
-    </div>
-    """
+st.caption(
+    "RailCast · Dynamic ETA Forecasting Prototype "
+    "• Predict → Explain → Simulate → Learn"
 )
