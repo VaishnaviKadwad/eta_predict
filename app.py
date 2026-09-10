@@ -264,7 +264,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 disruption = st.selectbox(
-    ""Select scenario"",
+    "Select scenario",
     ["None", "Fog", "Heavy Rain / Storm", "Speed Restriction", "Signal Halt / Unscheduled Stoppage", "Track Congestion Spike", "Unscheduled Maintenance Block"]
 )
 
