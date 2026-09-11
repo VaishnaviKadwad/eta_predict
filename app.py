@@ -954,26 +954,20 @@ if role == "👤 Passenger":
             )
 
 
-        with col2:
+       with col2:
 
-            st.metric(
-                "Normal Forecast",
-                f"{normal_prediction:.1f} min"
-            )
+    st.metric(
+        "Expected Section Time",
+        f"{expected_section_time:.1f} min"
+    )
 
+with col3:
 
-        with col3:
-
-            impact = (
-                disruption_prediction
-                - normal_prediction
-            )
-
-            st.metric(
-                "Disruption Forecast",
-                f"{disruption_prediction:.1f} min",
-                delta=f"{impact:+.1f} min"
-            )
+    st.metric(
+        "Predicted Section Time",
+        f"{disruption_predicted_section_time:.1f} min",
+        delta=f"+{disruption_prediction:.1f} min delay"
+    )
 
 
         with col4:
