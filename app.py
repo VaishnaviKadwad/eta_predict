@@ -150,6 +150,7 @@ st.markdown("""
 BASE_DIR = Path(__file__).resolve().parent
 
 DATA_PATH = BASE_DIR / "demo_data.csv"
+STATIONS_PATH = BASE_DIR / "indian_stations.csv"
 MODEL_PATH = BASE_DIR / "xgb_model.pkl"
 RESIDUAL_MODEL_PATH = BASE_DIR / "residual_model.pkl"
 FEATURE_COLUMNS_PATH = BASE_DIR / "feature_columns.pkl"
@@ -248,7 +249,55 @@ def load_data():
     return pd.read_csv(DATA_PATH)
 
 
+def load_station_data():
+
+    if not STATIONS_PATH.exists():
+
+        st.error(
+            f"indian_stations.csv not found at: {STATIONS_PATH}"
+        )
+
+        st.stop()
+
+    stations = pd.read_csv(
+        STATIONS_PATH
+    )
+
+    stations.columns = [
+        str(col).strip()
+        for col in stations.columns
+    ]
+
+    stations["Station Code"] = (
+        stations["Station Code"]
+        .astype(str)
+        .str.strip()
+        .str.upper()
+    )
+
+    return stations
+
 df = load_data()
+stations_df = load_station_data()
+
+def get_station_name(station_code):
+
+    code = str(
+        station_code
+    ).strip().upper()
+
+    match = stations_df[
+        stations_df["Station Code"] == code
+    ]
+
+    if not match.empty:
+
+        return str(
+            match.iloc[0]["Station Name(en)"]
+        )
+
+    return code
+    
 
 
 # ============================================================
