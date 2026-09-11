@@ -893,10 +893,9 @@ if role == "👤 Passenger":
     )
 
 
-    if disruption == "None":
+       if disruption == "None":
 
         col1, col2, col3, col4 = st.columns(4)
-
 
         with col1:
 
@@ -905,21 +904,20 @@ if role == "👤 Passenger":
                 f"{current_delay:.1f} min"
             )
 
+        with col2:
 
-       with col2:
+            st.metric(
+                "Expected Section Time",
+                f"{expected_section_time:.1f} min"
+            )
 
-    st.metric(
-        "Expected Section Time",
-        f"{expected_section_time:.1f} min"
-    )
+        with col3:
 
-with col3:
-
-    st.metric(
-        "Predicted Section Time",
-        f"{disruption_predicted_section_time:.1f} min",
-        delta=f"+{disruption_prediction:.1f} min delay"
-    )
+            st.metric(
+                "Predicted Section Time",
+                f"{predicted_section_time:.1f} min",
+                delta=f"+{normal_prediction:.1f} min delay"
+            )
 
         with col4:
 
@@ -928,16 +926,59 @@ with col3:
                 risk
             )
 
+        low = normal_prediction - MODEL_MAE
+        high = normal_prediction + MODEL_MAE
 
-        st.info(
-            f"RailCast expects this section to take approximately "
-            f"**{expected_section_time:.1f} minutes** under normal "
-            f"historical running conditions. Based on the ML forecast, "
-            f"the predicted section time is approximately "
-            f"**{predicted_section_time:.1f} minutes**, including "
-            f"**{normal_prediction:.1f} minutes** of predicted delay."
+        st.caption(
+            f"Prediction range: {low:.1f} → {high:.1f} minutes"
         )
 
+    else:
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+
+            st.metric(
+                "Current Delay",
+                f"{current_delay:.1f} min"
+            )
+
+        with col2:
+
+            st.metric(
+                "Expected Section Time",
+                f"{expected_section_time:.1f} min"
+            )
+
+        with col3:
+
+            st.metric(
+                "Predicted Section Time",
+                f"{disruption_predicted_section_time:.1f} min",
+                delta=f"+{disruption_prediction:.1f} min delay"
+            )
+
+        with col4:
+
+            st.metric(
+                "Risk After Event",
+                delay_risk(
+                    disruption_prediction
+                )
+            )
+
+        impact = (
+            disruption_prediction
+            - normal_prediction
+        )
+
+        st.warning(
+            f"Under **{disruption}**, RailCast predicts "
+            f"approximately **{disruption_prediction:.1f} minutes "
+            f"of delay**, resulting in an estimated section travel "
+            f"time of **{disruption_predicted_section_time:.1f} minutes**."
+        )
 
     else:
 
