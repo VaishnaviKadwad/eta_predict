@@ -249,6 +249,7 @@ def load_data():
     return pd.read_csv(DATA_PATH)
 
 
+@st.cache_data
 def load_station_data():
 
     if not STATIONS_PATH.exists():
@@ -259,14 +260,32 @@ def load_station_data():
 
         st.stop()
 
-    stations = pd.read_csv(
-        STATIONS_PATH
-    )
+    stations = pd.read_csv(STATIONS_PATH)
 
     stations.columns = [
         str(col).strip()
         for col in stations.columns
     ]
+
+    required_columns = {
+        "Station Code",
+        "Station Name(en)",
+        "Latitude",
+        "Longitude"
+    }
+
+    missing_columns = required_columns.difference(
+        stations.columns
+    )
+
+    if missing_columns:
+
+        st.error(
+            "indian_stations.csv is missing required columns: "
+            + ", ".join(sorted(missing_columns))
+        )
+
+        st.stop()
 
     stations["Station Code"] = (
         stations["Station Code"]
@@ -275,16 +294,23 @@ def load_station_data():
         .str.upper()
     )
 
+    stations["Station Name(en)"] = (
+        stations["Station Name(en)"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+    )
+
     return stations
+
 
 df = load_data()
 stations_df = load_station_data()
 
+
 def get_station_name(station_code):
 
-    code = str(
-        station_code
-    ).strip().upper()
+    code = str(station_code).strip().upper()
 
     match = stations_df[
         stations_df["Station Code"] == code
@@ -292,12 +318,14 @@ def get_station_name(station_code):
 
     if not match.empty:
 
-        return str(
+        name = str(
             match.iloc[0]["Station Name(en)"]
-        )
+        ).strip()
+
+        if name and name.lower() != "nan":
+            return name
 
     return code
-    
 
 
 # ============================================================
@@ -530,6 +558,9 @@ station = str(
 next_station = str(
     selected_row["next_station"]
 )
+
+station_name = get_station_name(station)
+next_station_name = get_station_name(next_station)
 
 
 # ============================================================
@@ -910,12 +941,20 @@ if role == "👤 Passenger":
             station
         )
 
+        st.caption(
+            station_name
+        )
+
 
     with journey_b:
 
         st.metric(
             "Next Station",
             next_station
+        )
+
+        st.caption(
+            next_station_name
         )
 
 
@@ -931,6 +970,7 @@ if role == "👤 Passenger":
         f"Journey date: {selected_row['date']}"
     )
 
+
     # ========================================================
     # FORECAST
     # ========================================================
@@ -940,9 +980,11 @@ if role == "👤 Passenger":
         unsafe_allow_html=True
     )
 
+
     if disruption == "None":
 
         col1, col2, col3, col4 = st.columns(4)
+
 
         with col1:
 
@@ -951,12 +993,14 @@ if role == "👤 Passenger":
                 f"{current_delay:.1f} min"
             )
 
+
         with col2:
 
             st.metric(
                 "Expected Section Time",
                 f"{expected_section_time:.1f} min"
             )
+
 
         with col3:
 
@@ -966,6 +1010,7 @@ if role == "👤 Passenger":
                 delta=f"+{normal_prediction:.1f} min delay"
             )
 
+
         with col4:
 
             st.metric(
@@ -973,16 +1018,21 @@ if role == "👤 Passenger":
                 risk
             )
 
-        low = normal_prediction - MODEL_MAE
-        high = normal_prediction + MODEL_MAE
 
-        st.caption(
-            f"Prediction range: {low:.1f} → {high:.1f} minutes"
+        st.info(
+            f"RailCast expects this section to take approximately "
+            f"**{expected_section_time:.1f} minutes** under normal "
+            f"historical running conditions. Based on the ML forecast, "
+            f"the predicted section time is approximately "
+            f"**{predicted_section_time:.1f} minutes**, including "
+            f"**{normal_prediction:.1f} minutes** of predicted delay."
         )
+
 
     else:
 
         col1, col2, col3, col4 = st.columns(4)
+
 
         with col1:
 
@@ -991,12 +1041,14 @@ if role == "👤 Passenger":
                 f"{current_delay:.1f} min"
             )
 
+
         with col2:
 
             st.metric(
                 "Expected Section Time",
                 f"{expected_section_time:.1f} min"
             )
+
 
         with col3:
 
@@ -1005,6 +1057,7 @@ if role == "👤 Passenger":
                 f"{disruption_predicted_section_time:.1f} min",
                 delta=f"+{disruption_prediction:.1f} min delay"
             )
+
 
         with col4:
 
@@ -1015,22 +1068,22 @@ if role == "👤 Passenger":
                 )
             )
 
-        impact = (
-            disruption_prediction
-            - normal_prediction
-        )
 
-        st.warning(
-            f"Under **{disruption}**, RailCast predicts "
-            f"approximately **{disruption_prediction:.1f} minutes "
-            f"of delay**, resulting in an estimated section travel "
-            f"time of **{disruption_predicted_section_time:.1f} minutes**."
-        )
+        if disruption_predicted_section_time is not None:
 
+            impact = (
+                disruption_prediction
+                - normal_prediction
+            )
 
-    # ========================================================
-    # PASSENGER MESSAGE
-    # ========================================================
+            st.warning(
+                f"Under **{disruption}**, RailCast predicts "
+                f"approximately **{disruption_prediction:.1f} minutes "
+                f"of delay**, resulting in an estimated section travel "
+                f"time of **{disruption_predicted_section_time:.1f} minutes** "
+                f"({impact:+.1f} min change versus the normal forecast)."
+            )
+
 
     # ========================================================
     # PASSENGER MESSAGE
