@@ -882,7 +882,6 @@ if role == "👤 Passenger":
         f"Journey date: {selected_row['date']}"
     )
 
-
     # ========================================================
     # FORECAST
     # ========================================================
@@ -892,8 +891,7 @@ if role == "👤 Passenger":
         unsafe_allow_html=True
     )
 
-
-       if disruption == "None":
+    if disruption == "None":
 
         col1, col2, col3, col4 = st.columns(4)
 
@@ -980,53 +978,10 @@ if role == "👤 Passenger":
             f"time of **{disruption_predicted_section_time:.1f} minutes**."
         )
 
-    else:
 
-        col1, col2, col3, col4 = st.columns(4)
-
-
-        with col1:
-
-            st.metric(
-                "Current Delay",
-                f"{current_delay:.1f} min"
-            )
-
-
-       with col2:
-
-    st.metric(
-        "Expected Section Time",
-        f"{expected_section_time:.1f} min"
-    )
-
-with col3:
-
-    st.metric(
-        "Predicted Section Time",
-        f"{disruption_predicted_section_time:.1f} min",
-        delta=f"+{disruption_prediction:.1f} min delay"
-    )
-
-
-        with col4:
-
-            st.metric(
-                "Risk After Event",
-                delay_risk(
-                    disruption_prediction
-                )
-            )
-
-
-        if disruption_predicted_section_time is not None:
-
-            st.warning(
-                f"Under **{disruption}**, the predicted section time "
-                f"would increase to approximately "
-                f"**{disruption_predicted_section_time:.1f} minutes**."
-            )
-
+    # ========================================================
+    # PASSENGER MESSAGE
+    # ========================================================
 
     # ========================================================
     # PASSENGER MESSAGE
