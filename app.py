@@ -772,6 +772,34 @@ section_time = float(
     )
 )
 
+# ============================================================
+# ETA CALCULATION
+# ============================================================
+
+# Expected section time is the historical/base running time
+# for the selected station-to-next-station section.
+expected_section_time = max(
+    0.0,
+    section_time
+)
+
+# RailCast predicts the additional delay in minutes.
+# Predicted section time = normal section time + predicted delay.
+predicted_section_time = max(
+    expected_section_time,
+    expected_section_time + normal_prediction
+)
+
+# When a disruption is selected, calculate the corresponding
+# predicted section time for the scenario as well.
+disruption_predicted_section_time = None
+
+if disruption_prediction is not None:
+    disruption_predicted_section_time = max(
+        expected_section_time,
+        expected_section_time + disruption_prediction
+    )
+
 
 # ============================================================
 # RISK
@@ -881,19 +909,17 @@ if role == "👤 Passenger":
         with col2:
 
             st.metric(
-                "RailCast Forecast",
-                f"{normal_prediction:.1f} min"
+                "Expected Section Time",
+                f"{expected_section_time:.1f} min"
             )
 
 
         with col3:
 
-            low = normal_prediction - MODEL_MAE
-            high = normal_prediction + MODEL_MAE
-
             st.metric(
-                "Estimated Range",
-                f"{low:.0f} → {high:.0f} min"
+                "Predicted Section Time",
+                f"{predicted_section_time:.1f} min",
+                delta=f"+{normal_prediction:.1f} min delay"
             )
 
 
@@ -903,6 +929,16 @@ if role == "👤 Passenger":
                 "Delay Risk",
                 risk
             )
+
+
+        st.info(
+            f"RailCast expects this section to take approximately "
+            f"**{expected_section_time:.1f} minutes** under normal "
+            f"historical running conditions. Based on the ML forecast, "
+            f"the predicted section time is approximately "
+            f"**{predicted_section_time:.1f} minutes**, including "
+            f"**{normal_prediction:.1f} minutes** of predicted delay."
+        )
 
 
     else:
@@ -947,6 +983,15 @@ if role == "👤 Passenger":
                 delay_risk(
                     disruption_prediction
                 )
+            )
+
+
+        if disruption_predicted_section_time is not None:
+
+            st.warning(
+                f"Under **{disruption}**, the predicted section time "
+                f"would increase to approximately "
+                f"**{disruption_predicted_section_time:.1f} minutes**."
             )
 
 
@@ -1517,6 +1562,12 @@ if role == "👤 Passenger":
 
                 "prediction":
                     normal_prediction,
+
+                "expected_section_time":
+                    expected_section_time,
+
+                "predicted_section_time":
+                    predicted_section_time,
 
                 "feedback":
                     feedback
